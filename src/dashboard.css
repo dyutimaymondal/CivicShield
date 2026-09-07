@@ -1,0 +1,311 @@
+/* CivicShield Dashboard */
+
+* {
+  box-sizing: border-box;
+}
+
+.dashboard-page {
+  min-height: 100vh;
+  background: #07151d;
+  color: #ffffff;
+  font-family: Arial, sans-serif;
+}
+
+/* Navbar */
+
+.dashboard-nav {
+  height: 72px;
+  padding: 0 7%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: #081b25;
+}
+
+.dashboard-nav h2 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: 0.5px;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.status-dot {
+  color: #39e6a5;
+  font-size: 14px;
+}
+
+.logout-btn {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: white;
+  padding: 9px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Main */
+
+.dashboard-content {
+  width: min(1100px, 90%);
+  margin: 0 auto;
+  padding: 55px 0 80px;
+}
+
+/* Header */
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 35px;
+}
+
+.eyebrow {
+  color: #39e6a5;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.dashboard-header h1 {
+  font-size: 42px;
+  margin: 0 0 15px;
+  line-height: 1.15;
+}
+
+.dashboard-header p {
+  color: #b9c9d0;
+  max-width: 650px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.live-badge {
+  white-space: nowrap;
+  padding: 12px 18px;
+  border: 1px solid rgba(57, 230, 165, 0.4);
+  border-radius: 30px;
+  color: #39e6a5;
+  background: rgba(57, 230, 165, 0.08);
+}
+
+.live-badge span {
+  margin-right: 6px;
+}
+
+/* Report Card */
+
+.report-card {
+  background: #0c222d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 35px;
+  margin-bottom: 30px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.card-title {
+  margin-bottom: 30px;
+}
+
+.card-title h2 {
+  margin: 0 0 8px;
+  font-size: 25px;
+}
+
+.card-title p {
+  margin: 0;
+  color: #9fb2ba;
+}
+
+/* Form */
+
+.form-group {
+  margin-bottom: 23px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 9px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.form-group textarea,
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 14px 15px;
+  border-radius: 10px;
+  border: 1px solid #31505d;
+  background: #071a23;
+  color: white;
+  font-size: 15px;
+  outline: none;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 130px;
+}
+
+.form-group textarea:focus,
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #39e6a5;
+  box-shadow: 0 0 0 3px rgba(57, 230, 165, 0.08);
+}
+
+.form-group select option {
+  background: #071a23;
+  color: white;
+}
+
+/* Upload */
+
+.upload-box {
+  min-height: 120px;
+  border: 2px dashed #31505d;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #9fb2ba;
+  background: #071a23;
+}
+
+.upload-box span {
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.upload-box p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Submit */
+
+.submit-report-btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  background: #39e6a5;
+  color: #04120e;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.submit-report-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(57, 230, 165, 0.2);
+}
+
+.form-message {
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(57, 230, 165, 0.1);
+  border: 1px solid rgba(57, 230, 165, 0.25);
+  color: #39e6a5;
+}
+
+/* Dashboard Cards */
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.dashboard-card {
+  padding: 25px;
+  border-radius: 15px;
+  background: #0c222d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.card-icon {
+  font-size: 30px;
+}
+
+.dashboard-card h3 {
+  margin: 0 0 7px;
+  font-size: 17px;
+}
+
+.dashboard-card p {
+  margin: 0;
+  color: #8fa5ae;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Footer */
+
+.dashboard-footer {
+  text-align: center;
+  padding: 25px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #718892;
+  font-size: 13px;
+}
+
+/* Mobile */
+
+@media (max-width: 800px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-header h1 {
+    font-size: 32px;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .report-card {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 500px) {
+  .dashboard-nav {
+    padding: 0 20px;
+  }
+
+  .dashboard-content {
+    width: 92%;
+    padding-top: 35px;
+  }
+
+  .dashboard-nav h2 {
+    font-size: 20px;
+  }
+
+  .status-dot {
+    display: none;
+  }
+}
