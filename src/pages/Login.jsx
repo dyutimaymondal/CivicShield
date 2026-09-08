@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import { authStore } from "../lib/authStore";
 import { rateLimiter, sanitizeInput, validateEmail } from "../lib/security";
 import "../auth.css";
 
@@ -19,7 +19,7 @@ function Login() {
 
   // Check if already authenticated
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authStore.getActiveSession().then((session) => {
       if (session?.user) {
         navigate("/dashboard", { replace: true });
       }
@@ -70,12 +70,13 @@ function Login() {
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: cleanEmail,
-      password: password,
-    });
+    try {
+      await authStore.login(cleanEmail, password);
 
-    if (error) {
+      // Success: clear brute-force counters
+      rateLimiter.clearAttempts(cleanEmail);
+      navigate(from, { replace: true });
+    } catch (error) {
       // Record failed attempt and compute progressive backoff
       const { locked, remainingSeconds } = rateLimiter.recordFailedAttempt(cleanEmail);
       if (locked) {
@@ -84,13 +85,9 @@ function Login() {
       } else {
         setMessage(error.message || "Invalid email or password.");
       }
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Success: clear brute-force counters
-    rateLimiter.clearAttempts(cleanEmail);
-    navigate(from, { replace: true });
   };
 
   const handleForgotPassword = async () => {

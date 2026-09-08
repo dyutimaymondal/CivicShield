@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { authStore } from "../lib/authStore";
 
 export default function ProtectedRoute({ children }) {
   const [loading, setLoading] = useState(true);
@@ -9,16 +10,32 @@ export default function ProtectedRoute({ children }) {
 
   useEffect(() => {
     let isMounted = true;
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (isMounted) {
-        setSession(session);
-        setLoading(false);
-      }
-    });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    async function checkAuth() {
+      try {
+        const active = await authStore.getActiveSession();
+        if (isMounted) {
+          setSession(active);
+          setLoading(false);
+        }
+      } catch {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       if (isMounted) {
-        setSession(session);
+        if (newSession) {
+          authStore.setStoredSession(newSession);
+          setSession(newSession);
+        } else {
+          const fallback = authStore.getStoredSession();
+          setSession(fallback);
+        }
         setLoading(false);
       }
     });

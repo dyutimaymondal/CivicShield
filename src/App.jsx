@@ -20,18 +20,24 @@ import {
   Users
 } from "lucide-react";
 import { supabase } from "./lib/supabaseClient";
+import { authStore } from "./lib/authStore";
 import "./App.css";
 
 function App() {
   const [currentUser, setCurrentUser] = React.useState(null);
 
   React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authStore.getActiveSession().then((session) => {
       setCurrentUser(session?.user || null);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setCurrentUser(session?.user || null);
+      if (session?.user) {
+        setCurrentUser(session.user);
+      } else {
+        const stored = authStore.getStoredSession();
+        setCurrentUser(stored?.user || null);
+      }
     });
 
     return () => subscription?.unsubscribe();
@@ -78,7 +84,7 @@ function App() {
                 </Link>
                 <button
                   onClick={async () => {
-                    await supabase.auth.signOut();
+                    await authStore.logout();
                     setCurrentUser(null);
                   }}
                   className="nav-link"

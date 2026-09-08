@@ -24,9 +24,11 @@ import {
   Layers,
   Users,
   Building2,
-  Navigation
+  Navigation,
+  ArrowRight
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
+import { authStore } from "../lib/authStore";
 import { rateLimiter, sanitizeInput, validateImageFile } from "../lib/security";
 import { civicStore } from "../lib/civicStore";
 import { verificationService } from "../lib/verificationService";
@@ -54,13 +56,14 @@ function Dashboard() {
   const [isVerified, setIsVerified] = useState(false);
   const [_verificationRecord, setVerificationRecord] = useState(null);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showOnboardingPrompt, setShowOnboardingPrompt] = useState(false);
 
   // Get logged-in user & enforce strict authentication
   useEffect(() => {
     let isMounted = true;
 
     async function loadUser() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = await authStore.getActiveSession();
       if (!session || !session.user) {
         navigate("/login", { replace: true });
         return;
@@ -72,20 +75,34 @@ function Dashboard() {
         setIsVerified(v.isVerified);
         setVerificationRecord(v);
         fetchReports(session.user.id);
+
+        // Check if onboarding prompt should be displayed
+        const urlParams = new URLSearchParams(window.location.search);
+        const promptParam = urlParams.get("promptVerify");
+        const promptStorage = sessionStorage.getItem("civicshield_prompt_verify");
+
+        if ((promptParam === "true" || promptStorage === "true") && !v.isVerified) {
+          setShowOnboardingPrompt(true);
+          sessionStorage.removeItem("civicshield_prompt_verify");
+          // Clean URL query param without refreshing
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
       }
     }
 
     loadUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session || !session.user) {
-        if (isMounted) {
-          setUser(null);
-          navigate("/login", { replace: true });
-        }
-      } else {
+      if (session?.user) {
         if (isMounted) {
           setUser(session.user);
+          authStore.setStoredSession(session);
+        }
+      } else {
+        const stored = authStore.getStoredSession();
+        if (!stored && isMounted) {
+          setUser(null);
+          navigate("/login", { replace: true });
         }
       }
     });
@@ -313,7 +330,7 @@ function Dashboard() {
 
   // Logout
   async function handleLogout() {
-    await supabase.auth.signOut();
+    await authStore.logout();
     setUser(null);
     navigate("/login", { replace: true });
   }
@@ -923,6 +940,81 @@ function Dashboard() {
         </section>
 
       </main>
+
+      {/* Aadhaar Identity Verification Prompt Modal (Post-Registration Onboarding) */}
+      <AnimatePresence>
+        {showOnboardingPrompt && (
+          <div className="onboarding-prompt-overlay">
+            <motion.div
+              className="onboarding-prompt-card"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <div className="onboarding-icon-badge">
+                <ShieldCheck size={36} />
+              </div>
+
+              <h2>Welcome to CivicShield!</h2>
+              <p className="onboarding-tagline">
+                Would you like to verify your citizen identity with Aadhaar now?
+              </p>
+
+              <div className="onboarding-perks">
+                <div className="onboarding-perk-item">
+                  <CheckCircle2 size={16} className="perk-icon" />
+                  <div>
+                    <strong>Digital Micro-Protest Voting</strong>
+                    <span>Cast cryptographically verified votes on public community demands.</span>
+                  </div>
+                </div>
+                <div className="onboarding-perk-item">
+                  <CheckCircle2 size={16} className="perk-icon" />
+                  <div>
+                    <strong>Fast-Track Priority Routing</strong>
+                    <span>Incidents backed by verified citizens receive higher municipal dispatch priority.</span>
+                  </div>
+                </div>
+                <div className="onboarding-perk-item">
+                  <CheckCircle2 size={16} className="perk-icon" />
+                  <div>
+                    <strong>Privacy Guaranteed</strong>
+                    <span>Zero-knowledge validation. Your 12-digit number is never stored in plain text.</span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="onboarding-note">
+                Verification is completely optional. You can verify now, or skip and explore the entire portal with full access immediately.
+              </p>
+
+              <div className="onboarding-actions">
+                <button
+                  type="button"
+                  className="onboarding-verify-btn"
+                  onClick={() => {
+                    setShowOnboardingPrompt(false);
+                    setShowVerifyModal(true);
+                  }}
+                >
+                  <ShieldCheck size={18} />
+                  <span>Verify Aadhaar ID Now</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="onboarding-skip-btn"
+                  onClick={() => setShowOnboardingPrompt(false)}
+                >
+                  <span>Skip for Now & Access Portal</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Citizen Identity Verification Modal */}
       <VerifyModal

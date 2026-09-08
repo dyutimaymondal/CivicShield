@@ -14,7 +14,7 @@ import {
   ChevronRight,
   Radio
 } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import { authStore } from "../lib/authStore";
 import { civicStore } from "../lib/civicStore";
 import { verificationService } from "../lib/verificationService";
 import CivicMap from "../components/CivicMap";
@@ -39,11 +39,11 @@ export default function Incidents() {
   // Load user & reactive data
   useEffect(() => {
     async function loadUser() {
-      const { data } = await supabase.auth.getUser();
-      setUser(data?.user || null);
+      const session = await authStore.getActiveSession();
+      setUser(session?.user || null);
 
-      if (data?.user) {
-        const vStatus = verificationService.getVerificationStatus(data.user.id);
+      if (session?.user) {
+        const vStatus = verificationService.getVerificationStatus(session.user.id);
         setIsVerified(vStatus.isVerified);
       }
     }

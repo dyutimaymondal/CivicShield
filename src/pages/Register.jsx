@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, User, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import { authStore } from "../lib/authStore";
 import { rateLimiter, sanitizeInput, validateEmail, validatePassword } from "../lib/security";
 import "../auth.css";
 
@@ -17,7 +17,7 @@ function Register() {
 
   // Check if already authenticated
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authStore.getActiveSession().then((session) => {
       if (session?.user) {
         navigate("/dashboard", { replace: true });
       }
@@ -58,35 +58,24 @@ function Register() {
     setLoading(true);
     setMessage("");
 
-    const { data, error } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password: password,
-      options: {
-        data: {
-          full_name: cleanName,
-        },
-      },
-    });
+    try {
+      await authStore.registerWithoutEmailConfirmation(cleanEmail, password, cleanName);
 
-    if (error) {
-      setMessage(error.message);
-    } else {
-      if (data.session) {
-        setMessage("Account created successfully! Launching citizen portal... 🚀");
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1000);
-      } else {
-        setMessage(
-          "Account created! Please check your email to confirm registration, then sign in."
-        );
-      }
+      // Signal Dashboard to prompt for Aadhaar verification
+      sessionStorage.setItem("civicshield_prompt_verify", "true");
+
+      setMessage("Account created successfully! Launching citizen portal... 🚀");
+      setTimeout(() => {
+        navigate("/dashboard?promptVerify=true", { replace: true });
+      }, 700);
+    } catch (err) {
+      setMessage(err.message || "Unable to complete registration. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  const isSuccessMessage = message.includes("successful") || message.includes("Check your email");
+  const isSuccessMessage = message.includes("successful") || message.includes("Launching");
 
   return (
     <div className="auth-page">

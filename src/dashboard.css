@@ -973,3 +973,166 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   Aadhaar Verification Onboarding Prompt Modal
+   ========================================================================== */
+
+.onboarding-prompt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 10, 20, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.onboarding-prompt-card {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  background: linear-gradient(145deg, rgba(13, 27, 46, 0.96) 0%, rgba(9, 18, 33, 0.98) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  border-radius: var(--radius-xl, 18px);
+  padding: 36px 32px;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.65),
+    0 0 50px rgba(6, 182, 212, 0.18);
+  text-align: center;
+  overflow: hidden;
+}
+
+.onboarding-icon-badge {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-cyan-light, #38bdf8);
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.3);
+}
+
+.onboarding-prompt-card h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.onboarding-tagline {
+  font-size: 15px;
+  color: var(--text-secondary, #94a3b8);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.onboarding-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md, 12px);
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.onboarding-perk-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.onboarding-perk-item .perk-icon {
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.onboarding-perk-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.onboarding-perk-item strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.onboarding-perk-item span {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.onboarding-note {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 26px;
+  line-height: 1.5;
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.onboarding-verify-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: var(--radius-md, 12px);
+  background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+  color: #03141f;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35);
+  transition: all 0.25s ease;
+}
+
+.onboarding-verify-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(6, 182, 212, 0.55);
+  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+}
+
+.onboarding-skip-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: var(--radius-md, 12px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.onboarding-skip-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
