@@ -19,21 +19,27 @@ export default function CivicMap({ incidents = [], onSelectIncident, selectedInc
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      // Initialize map centered around default coordinates
-      const map = L.map(mapContainerRef.current, {
-        center: [28.6139, 77.2090],
-        zoom: 13,
-        zoomControl: true,
-        attributionControl: false
-      });
+      if (mapContainerRef.current._leaflet_id) {
+        delete mapContainerRef.current._leaflet_id;
+      }
+      try {
+        const map = L.map(mapContainerRef.current, {
+          center: [28.6139, 77.2090],
+          zoom: 13,
+          zoomControl: true,
+          attributionControl: false
+        });
 
-      // CartoDB Dark Matter tile layer for cyber-civic aesthetic
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        maxZoom: 19,
-        subdomains: "abcd",
-      }).addTo(map);
+        // CartoDB Dark Matter tile layer for cyber-civic aesthetic
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+          maxZoom: 19,
+          subdomains: "abcd",
+        }).addTo(map);
 
-      mapInstanceRef.current = map;
+        mapInstanceRef.current = map;
+      } catch (err) {
+        console.warn("CivicMap initialization notice:", err.message);
+      }
     }
 
     const map = mapInstanceRef.current;
