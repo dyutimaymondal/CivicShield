@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield,
@@ -34,6 +34,7 @@ import VerifyModal from "../components/VerifyModal";
 import "../dashboard.css";
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [reports, setReports] = useState([]);
 
@@ -54,35 +55,53 @@ function Dashboard() {
   const [_verificationRecord, setVerificationRecord] = useState(null);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
 
-  // Get logged-in user
+  // Get logged-in user & enforce strict authentication
   useEffect(() => {
-    getUser();
+    let isMounted = true;
+
+    async function loadUser() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      if (isMounted) {
+        setUser(session.user);
+        const v = verificationService.getVerificationStatus(session.user.id);
+        setIsVerified(v.isVerified);
+        setVerificationRecord(v);
+        fetchReports(session.user.id);
+      }
+    }
+
+    loadUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session || !session.user) {
+        if (isMounted) {
+          setUser(null);
+          navigate("/login", { replace: true });
+        }
+      } else {
+        if (isMounted) {
+          setUser(session.user);
+        }
+      }
+    });
 
     const handleVerifyEvent = (e) => {
       setIsVerified(e.detail?.isVerified || false);
       setVerificationRecord(e.detail);
     };
     window.addEventListener("civicshield_verification_updated", handleVerifyEvent);
-    return () => window.removeEventListener("civicshield_verification_updated", handleVerifyEvent);
-  }, []);
 
-  async function getUser() {
-    const { data, error } = await supabase.auth.getUser();
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    setUser(data.user);
-
-    if (data.user) {
-      const v = verificationService.getVerificationStatus(data.user.id);
-      setIsVerified(v.isVerified);
-      setVerificationRecord(v);
-      fetchReports(data.user.id);
-    }
-  }
+    return () => {
+      isMounted = false;
+      subscription?.unsubscribe();
+      window.removeEventListener("civicshield_verification_updated", handleVerifyEvent);
+    };
+  }, [navigate]);
 
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
@@ -101,23 +120,34 @@ function Dashboard() {
     );
   };
 
-  // Fetch user's reports
+  // Fetch user's reports isolated by userId
   async function fetchReports(userId) {
+    if (!userId) {
+      setReports([]);
+      setLoadingReports(false);
+      return;
+    }
     setLoadingReports(true);
 
-    const { data, error } = await supabase
-      .from("reports")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching reports:", error);
-    } else {
-      setReports(data || []);
+      if (!error && Array.isArray(data) && data.length > 0) {
+        setReports(data);
+      } else {
+        const localUserReports = civicStore.getUserReports(userId);
+        setReports(localUserReports);
+      }
+    } catch {
+      const localUserReports = civicStore.getUserReports(userId);
+      setReports(localUserReports);
+    } finally {
+      setLoadingReports(false);
     }
-
-    setLoadingReports(false);
   }
 
   // Secure Photo Selection & Validation
@@ -284,7 +314,8 @@ function Dashboard() {
   // Logout
   async function handleLogout() {
     await supabase.auth.signOut();
-    window.location.href = "/login";
+    setUser(null);
+    navigate("/login", { replace: true });
   }
 
   const handleRemovePhoto = (e) => {
@@ -366,11 +397,16 @@ function Dashboard() {
 
           <div className="user-profile-pill">
             <div className="user-avatar">
-              {(user?.user_metadata?.full_name || user?.email || "C").charAt(0).toUpperCase()}
+              {(user?.user_metadata?.full_name || user?.email || "U").charAt(0).toUpperCase()}
             </div>
-            <span className="user-name">
-              {user?.user_metadata?.full_name || user?.email || "Citizen"}
-            </span>
+            <div style={{ display: "flex", flexDirection: "column", textAlign: "left", lineHeight: 1.2 }}>
+              <span className="user-name" style={{ fontSize: "12px", fontWeight: 600 }}>
+                {user?.user_metadata?.full_name || user?.email?.split("@")[0]}
+              </span>
+              <span style={{ fontSize: "10px", color: "var(--text-muted)", opacity: 0.8 }}>
+                {user?.email}
+              </span>
+            </div>
           </div>
 
           <button onClick={handleLogout} className="logout-action-btn" title="Sign out of CivicShield">
@@ -386,8 +422,10 @@ function Dashboard() {
         {/* WELCOME BANNER */}
         <section className="dashboard-welcome">
           <div className="welcome-text">
-            <h1>Welcome back, {user?.user_metadata?.full_name ? user.user_metadata.full_name.split(" ")[0] : "Citizen"} 👋</h1>
-            <p>Report neighborhood concerns and let CivicShield analyze, cluster, and route them to municipal authorities.</p>
+            <h1>Welcome back, {user?.user_metadata?.full_name ? user.user_metadata.full_name.split(" ")[0] : (user?.email ? user.email.split("@")[0] : "Citizen")} 👋</h1>
+            <p>
+              Account: <strong style={{ color: "var(--accent-cyan)" }}>{user?.email}</strong> • Report neighborhood concerns to route directly to municipal authorities.
+            </p>
           </div>
 
           <div className="welcome-badge">

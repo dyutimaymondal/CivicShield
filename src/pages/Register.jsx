@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, User, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
@@ -14,6 +14,15 @@ function Register() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Check if already authenticated
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        navigate("/dashboard", { replace: true });
+      }
+    });
+  }, [navigate]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -62,14 +71,15 @@ function Register() {
     if (error) {
       setMessage(error.message);
     } else {
-      setMessage(
-        "Registration successful! Check your email if confirmation is required."
-      );
-
       if (data.session) {
+        setMessage("Account created successfully! Launching citizen portal... 🚀");
         setTimeout(() => {
-          navigate("/");
-        }, 1500);
+          navigate("/dashboard");
+        }, 1000);
+      } else {
+        setMessage(
+          "Account created! Please check your email to confirm registration, then sign in."
+        );
       }
     }
 

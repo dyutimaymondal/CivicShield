@@ -249,6 +249,17 @@ class CivicStore {
     }
   }
 
+  getUserReports(userId) {
+    if (!userId) return [];
+    try {
+      const data = localStorage.getItem(STORAGE_KEY_REPORTS);
+      const reports = data ? JSON.parse(data) : [];
+      return reports.filter((r) => r.user_id === userId);
+    } catch {
+      return [];
+    }
+  }
+
   getIncidentById(id) {
     const incidents = this.getIncidents();
     return incidents.find((inc) => inc.id === id) || null;

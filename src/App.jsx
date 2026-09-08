@@ -19,9 +19,24 @@ import {
   Building2,
   Users
 } from "lucide-react";
+import { supabase } from "./lib/supabaseClient";
 import "./App.css";
 
 function App() {
+  const [currentUser, setCurrentUser] = React.useState(null);
+
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUser(session?.user || null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user || null);
+    });
+
+    return () => subscription?.unsubscribe();
+  }, []);
+
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: (custom = 0) => ({
@@ -54,10 +69,42 @@ function App() {
             <Link to="/incidents" className="nav-link">Public Incidents</Link>
             <Link to="/authority" className="nav-link" style={{ color: "var(--accent-amber)" }}>Authority Command</Link>
             <a href="#workflow" className="nav-link">Workflow</a>
-            <Link to="/dashboard" className="login-btn">
-              <span>Citizen Portal</span>
-              <ArrowRight size={15} />
-            </Link>
+
+            {currentUser ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Link to="/dashboard" className="login-btn">
+                  <span>Portal ({currentUser.user_metadata?.full_name?.split(" ")[0] || currentUser.email?.split("@")[0]})</span>
+                  <ArrowRight size={15} />
+                </Link>
+                <button
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    setCurrentUser(null);
+                  }}
+                  className="nav-link"
+                  style={{
+                    background: "transparent",
+                    border: "1px solid rgba(255, 255, 255, 0.14)",
+                    borderRadius: "8px",
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    fontSize: "13px"
+                  }}
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Link to="/login" className="nav-link" style={{ fontWeight: 600 }}>
+                  Sign In
+                </Link>
+                <Link to="/register" className="login-btn">
+                  <span>Register</span>
+                  <ArrowRight size={15} />
+                </Link>
+              </div>
+            )}
           </div>
         </nav>
       </header>
@@ -109,7 +156,7 @@ function App() {
             animate="visible"
             custom={3}
           >
-            <Link to="/dashboard" className="primary-btn">
+            <Link to={currentUser ? "/dashboard" : "/login"} className="primary-btn">
               <Zap size={18} />
               <span>Report a Problem</span>
             </Link>

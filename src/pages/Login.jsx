@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
@@ -8,12 +8,23 @@ import "../auth.css";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
+
+  // Check if already authenticated
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        navigate("/dashboard", { replace: true });
+      }
+    });
+  }, [navigate]);
 
   // Countdown timer for lockout
   useEffect(() => {
@@ -79,7 +90,7 @@ function Login() {
 
     // Success: clear brute-force counters
     rateLimiter.clearAttempts(cleanEmail);
-    navigate("/dashboard");
+    navigate(from, { replace: true });
   };
 
   const handleForgotPassword = async () => {
