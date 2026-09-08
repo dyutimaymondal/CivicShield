@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Shield, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
+import { rateLimiter, sanitizeInput, validateEmail } from "../lib/security";
 import "../auth.css";
 
 function Login() {
@@ -12,12 +13,46 @@ function Login() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (lockoutSeconds <= 0) return;
+
+    const timer = setInterval(() => {
+      setLockoutSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setMessage("");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [lockoutSeconds]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (!email || !password) {
+    const cleanEmail = sanitizeInput(email).toLowerCase();
+
+    if (!cleanEmail || !password) {
       setMessage("Please enter your email and password.");
+      return;
+    }
+
+    if (!validateEmail(cleanEmail)) {
+      setMessage("Please enter a valid email address format.");
+      return;
+    }
+
+    // Check brute-force lockout status
+    const lockoutStatus = rateLimiter.isLockedOut(cleanEmail);
+    if (lockoutStatus.locked) {
+      setLockoutSeconds(lockoutStatus.remainingSeconds);
+      setMessage(`Security Lockout Active: Too many failed login attempts. Please wait ${lockoutStatus.remainingSeconds}s.`);
       return;
     }
 
@@ -25,42 +60,69 @@ function Login() {
     setMessage("");
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: cleanEmail,
+      password: password,
     });
 
     if (error) {
-      setMessage(error.message);
+      // Record failed attempt and compute progressive backoff
+      const { locked, remainingSeconds } = rateLimiter.recordFailedAttempt(cleanEmail);
+      if (locked) {
+        setLockoutSeconds(remainingSeconds);
+        setMessage(`Security Lockout: Too many failed attempts. Try again in ${remainingSeconds}s.`);
+      } else {
+        setMessage(error.message || "Invalid email or password.");
+      }
       setLoading(false);
       return;
     }
 
+    // Success: clear brute-force counters
+    rateLimiter.clearAttempts(cleanEmail);
     navigate("/dashboard");
   };
 
   const handleForgotPassword = async () => {
-    if (!email) {
-      setMessage("Please enter your email first.");
+    const cleanEmail = sanitizeInput(email).toLowerCase();
+
+    if (!cleanEmail) {
+      setMessage("Please enter your email address first.");
+      return;
+    }
+
+    if (!validateEmail(cleanEmail)) {
+      setMessage("Please enter a valid email address format.");
+      return;
+    }
+
+    // Rate limit password reset requests (max 1 per 60s)
+    const cooldownStatus = rateLimiter.checkCooldown(`reset_${cleanEmail}`, 60);
+    if (!cooldownStatus.allowed) {
+      setMessage(`Rate limit exceeded. Please wait ${cooldownStatus.remainingSeconds}s before requesting another reset link.`);
       return;
     }
 
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://localhost:5173/reset-password",
+    // Use dynamic origin to avoid hardcoded localhost vulnerability
+    const redirectUrl = `${window.location.origin}/reset-password`;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: redirectUrl,
     });
 
     if (error) {
       setMessage(error.message);
     } else {
-      setMessage("Password reset link sent! Check your Gmail. 📧");
+      setMessage("Password reset link sent! Check your email inbox. 📧");
     }
 
     setLoading(false);
   };
 
   const isSuccessMessage = message.includes("sent") || message.includes("success");
+  const isLocked = lockoutSeconds > 0;
 
   return (
     <div className="auth-page">
@@ -95,6 +157,7 @@ function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
+                  disabled={isLocked}
                 />
                 <Mail size={17} className="input-icon" />
               </div>
@@ -107,7 +170,7 @@ function Login() {
                   type="button"
                   onClick={handleForgotPassword}
                   className="forgot-password-btn"
-                  disabled={loading}
+                  disabled={loading || isLocked}
                 >
                   Forgot Password?
                 </button>
@@ -120,16 +183,26 @@ function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
+                  disabled={isLocked}
                 />
                 <Lock size={17} className="input-icon" />
               </div>
             </div>
 
-            <button type="submit" className="auth-submit-btn" disabled={loading}>
+            <button
+              type="submit"
+              className="auth-submit-btn"
+              disabled={loading || isLocked}
+            >
               {loading ? (
                 <>
                   <Loader2 size={18} className="spinner-icon" />
                   <span>Authenticating...</span>
+                </>
+              ) : isLocked ? (
+                <>
+                  <ShieldAlert size={18} />
+                  <span>Locked ({lockoutSeconds}s)</span>
                 </>
               ) : (
                 <>

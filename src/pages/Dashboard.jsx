@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield,
+  ShieldCheck,
   LogOut,
   FileText,
   Clock,
@@ -18,9 +20,17 @@ import {
   Bot,
   Calendar,
   Inbox,
-  AlertTriangle
+  AlertTriangle,
+  Layers,
+  Users,
+  Building2,
+  Navigation
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
+import { rateLimiter, sanitizeInput, validateImageFile } from "../lib/security";
+import { civicStore } from "../lib/civicStore";
+import { verificationService } from "../lib/verificationService";
+import VerifyModal from "../components/VerifyModal";
 import "../dashboard.css";
 
 function Dashboard() {
@@ -37,11 +47,23 @@ function Dashboard() {
   const [message, setMessage] = useState("");
 
   const [analysis, setAnalysis] = useState(null);
+  const [clusterInfo, setClusterInfo] = useState(null);
   const [filter, setFilter] = useState("all");
+
+  const [isVerified, setIsVerified] = useState(false);
+  const [_verificationRecord, setVerificationRecord] = useState(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   // Get logged-in user
   useEffect(() => {
     getUser();
+
+    const handleVerifyEvent = (e) => {
+      setIsVerified(e.detail?.isVerified || false);
+      setVerificationRecord(e.detail);
+    };
+    window.addEventListener("civicshield_verification_updated", handleVerifyEvent);
+    return () => window.removeEventListener("civicshield_verification_updated", handleVerifyEvent);
   }, []);
 
   async function getUser() {
@@ -55,9 +77,29 @@ function Dashboard() {
     setUser(data.user);
 
     if (data.user) {
+      const v = verificationService.getVerificationStatus(data.user.id);
+      setIsVerified(v.isVerified);
+      setVerificationRecord(v);
       fetchReports(data.user.id);
     }
   }
+
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      setLocation("Sector 4 Central Corridor (Manual Entry)");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(4);
+        const lng = pos.coords.longitude.toFixed(4);
+        setLocation(`Sector Geofence [${lat}, ${lng}]`);
+      },
+      () => {
+        setLocation("Sector 4 Arterial Highway (GPS Simulated)");
+      }
+    );
+  };
 
   // Fetch user's reports
   async function fetchReports(userId) {
@@ -78,6 +120,26 @@ function Dashboard() {
     setLoadingReports(false);
   }
 
+  // Secure Photo Selection & Validation
+  const handlePhotoSelect = (file) => {
+    if (!file) {
+      setPhoto(null);
+      return;
+    }
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setMessage(`Security Alert: ${validation.error}`);
+      setPhoto(null);
+      const fileInput = document.getElementById("report-photo");
+      if (fileInput) fileInput.value = "";
+      return;
+    }
+
+    setMessage("");
+    setPhoto(file);
+  };
+
   // Submit report
   async function handleSubmit(e) {
     e.preventDefault();
@@ -85,7 +147,12 @@ function Dashboard() {
     setMessage("");
     setAnalysis(null);
 
-    if (!description.trim()) {
+    // Sanitize user inputs to prevent SQL / Script injections
+    const cleanTitle = sanitizeInput(title, 150);
+    const cleanDescription = sanitizeInput(description, 3000);
+    const cleanLocation = sanitizeInput(location, 150);
+
+    if (!cleanDescription.trim()) {
       setMessage("Please enter a complaint description.");
       return;
     }
@@ -95,48 +162,55 @@ function Dashboard() {
       return;
     }
 
+    // Rate-limit report submissions (anti-flood: max 1 report every 15s per citizen)
+    const cooldown = rateLimiter.checkCooldown(`report_submit_${user.id}`, 15);
+    if (!cooldown.allowed) {
+      setMessage(`Submission rate limit: please wait ${cooldown.remainingSeconds}s before submitting another report.`);
+      return;
+    }
+
     setLoading(true);
 
     try {
       // --------------------------------
-      // STEP 1: AI ANALYSIS
+      // STEP 1: AI ANALYSIS (Edge Function with Fallback)
       // --------------------------------
+      let aiData = null;
+      try {
+        const { data: edgeAi, error: aiError } =
+          await supabase.functions.invoke("analyze-report", {
+            body: {
+              description: cleanDescription,
+            },
+          });
 
-      const { data: aiData, error: aiError } =
-        await supabase.functions.invoke("analyze-report", {
-          body: {
-            description: description,
-          },
-        });
-
-      if (aiError) {
-        console.error("AI analysis error:", aiError);
-        throw new Error("AI analysis failed.");
+        if (!aiError && edgeAi && !edgeAi.error) {
+          aiData = edgeAi;
+        }
+      } catch (e) {
+        console.warn("Edge function note:", e.message);
       }
 
-      if (aiData?.error) {
-        throw new Error(aiData.error);
-      }
-
-      console.log("AI Analysis:", aiData);
-
-      setAnalysis(aiData);
-
       // --------------------------------
-      // STEP 2: UPLOAD PHOTO
+      // STEP 2: UPLOAD PHOTO (MIME & Size Verified)
       // --------------------------------
-
       let photoUrl = "";
 
       if (photo) {
-        const fileExtension =
-          photo.name.split(".").pop()?.toLowerCase() || "jpg";
+        const validation = validateImageFile(photo);
+        if (!validation.valid) {
+          throw new Error(validation.error);
+        }
 
-        const filePath = `${user.id}/${Date.now()}.${fileExtension}`;
+        const safeExtension = validation.safeExtension || "jpg";
+        const filePath = `${user.id}/${Date.now()}.${safeExtension}`;
 
         const { error: uploadError } = await supabase.storage
           .from("report-photos")
-          .upload(filePath, photo);
+          .upload(filePath, photo, {
+            contentType: photo.type,
+            upsert: false,
+          });
 
         if (uploadError) {
           console.error("Photo upload error:", uploadError);
@@ -151,28 +225,29 @@ function Dashboard() {
       }
 
       // --------------------------------
-      // STEP 3: SAVE REPORT
+      // STEP 3: PROCESS REPORT THROUGH AI CLUSTERING & STORE
       // --------------------------------
+      const clusterResult = await civicStore.processNewCitizenReport({
+        title: cleanTitle,
+        description: cleanDescription,
+        category: aiData?.category,
+        location: cleanLocation,
+        photoUrl,
+        user
+      });
 
-      const { error: insertError } = await supabase
-        .from("reports")
-        .insert([
-          {
-            title: title || aiData.issue,
-            description: description,
-            category: aiData.category,
-            location: location,
-            photo_url: photoUrl,
-            status: "pending",
-            severity: aiData.severity,
-            user_id: user.id,
-          },
-        ]);
+      const effectiveAi = aiData || {
+        issue: clusterResult.aiAnalysis.normalizedProblem,
+        category: clusterResult.aiAnalysis.category,
+        severity: clusterResult.aiAnalysis.severity,
+        priority: clusterResult.incident.priority,
+        summary: `AI Assessment: Categorized under ${clusterResult.aiAnalysis.category}. Severity rated ${clusterResult.aiAnalysis.severity}. Dynamic priority computed at ${clusterResult.incident.priority_score}.`,
+        model: clusterResult.aiAnalysis.model,
+        source: clusterResult.aiAnalysis.source
+      };
 
-      if (insertError) {
-        console.error("Database error:", insertError);
-        throw new Error("Could not save the report.");
-      }
+      setAnalysis(effectiveAi);
+      setClusterInfo(clusterResult);
 
       // Refresh reports
       await fetchReports(user.id);
@@ -189,7 +264,15 @@ function Dashboard() {
         fileInput.value = "";
       }
 
-      setMessage("Report submitted and analyzed successfully! ✅");
+      if (clusterResult.isClustered) {
+        setMessage(
+          `Report Submitted & Clustered! ✅ AI linked your report to unified incident "${clusterResult.incident.title}". Dynamic Priority: ${clusterResult.incident.priority_score}.`
+        );
+      } else {
+        setMessage(
+          `Report Submitted! ✅ New Unified Incident created: "${clusterResult.incident.title}". Grounded Public Demand active for Digital Micro-Protest!`
+        );
+      }
     } catch (error) {
       console.error(error);
       setMessage(error.message || "Something went wrong.");
@@ -254,6 +337,32 @@ function Dashboard() {
             <span className="dot" />
             <span>Network Live</span>
           </div>
+
+          <Link to="/incidents" className="nav-link-btn">
+            <Layers size={14} />
+            <span>Public Incidents</span>
+          </Link>
+
+          <Link to="/authority" className="nav-link-btn authority-btn">
+            <Building2 size={14} />
+            <span>Authority Command</span>
+          </Link>
+
+          {isVerified ? (
+            <div className="verified-citizen-pill" title="Cryptographically Verified Citizen">
+              <ShieldCheck size={14} />
+              <span>Verified Citizen</span>
+            </div>
+          ) : (
+            <button
+              className="unverified-trigger-btn"
+              onClick={() => setShowVerifyModal(true)}
+              title="Verify Aadhaar/Gov ID to unlock Digital Micro-Protest support"
+            >
+              <Shield size={14} />
+              <span>Verify Aadhaar ID</span>
+            </button>
+          )}
 
           <div className="user-profile-pill">
             <div className="user-avatar">
@@ -327,6 +436,21 @@ function Dashboard() {
               <p>Resolved Issues</p>
             </div>
           </motion.div>
+
+          <motion.div
+            className="stat-card"
+            whileHover={{ y: -2 }}
+          >
+            <Link to="/incidents" style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: "16px", width: "100%" }}>
+              <div className="stat-card-icon violet">
+                <Users size={22} />
+              </div>
+              <div className="stat-card-data">
+                <h3 style={{ fontSize: "17px" }}>Micro-Protests</h3>
+                <p>Support Public Demands ➔</p>
+              </div>
+            </Link>
+          </motion.div>
         </section>
 
         {/* REPORT SUBMISSION FORM */}
@@ -356,12 +480,33 @@ function Dashboard() {
                 </div>
               </div>
 
-              {/* LOCATION */}
+              {/* LOCATION WITH GPS DETECT */}
               <div className="form-group">
-                <label htmlFor="report-location">
-                  <MapPin size={15} />
-                  <span>Location or Landmark</span>
-                </label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label htmlFor="report-location" style={{ marginBottom: 0 }}>
+                    <MapPin size={15} />
+                    <span>Location or Landmark</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    style={{
+                      background: "rgba(6, 182, 212, 0.12)",
+                      border: "1px solid rgba(6, 182, 212, 0.3)",
+                      borderRadius: "6px",
+                      color: "var(--accent-cyan-light)",
+                      fontSize: "11px",
+                      padding: "3px 8px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <Navigation size={11} />
+                    <span>Auto-Detect GPS</span>
+                  </button>
+                </div>
                 <div className="field-with-icon">
                   <input
                     id="report-location"
@@ -402,8 +547,8 @@ function Dashboard() {
                 <input
                   id="report-photo"
                   type="file"
-                  accept="image/*"
-                  onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handlePhotoSelect(e.target.files?.[0] || null)}
                   className="hidden-file-input"
                 />
 
@@ -412,7 +557,7 @@ function Dashboard() {
                     <UploadCloud size={20} />
                   </div>
                   <div className="upload-title">Click to upload or drag photo here</div>
-                  <div className="upload-subtitle">PNG, JPG, or WEBP up to 10MB</div>
+                  <div className="upload-subtitle">PNG, JPG, or WEBP up to 5MB</div>
                 </div>
               </div>
 
@@ -490,7 +635,7 @@ function Dashboard() {
 
                 <div className="ai-verified-badge">
                   <Sparkles size={13} />
-                  <span>Neural Synthesis Verified</span>
+                  <span>{analysis.model ? `⚡ ${analysis.model}` : "Neural Synthesis Verified"}</span>
                 </div>
               </div>
 
@@ -522,6 +667,87 @@ function Dashboard() {
                   <span>AI Incident Brief & Dispatch Summary</span>
                 </div>
                 <p>{analysis.summary || "Complaint successfully categorized for municipal dispatch."}</p>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* AI INCIDENT CLUSTERING & MICRO-PROTEST LINK */}
+        <AnimatePresence>
+          {clusterInfo && (
+            <motion.section
+              className="ai-analysis-card"
+              style={{
+                borderColor: "rgba(139, 92, 246, 0.45)",
+                background: "linear-gradient(135deg, rgba(16, 26, 46, 0.95) 0%, rgba(20, 15, 38, 0.95) 100%)",
+                boxShadow: "0 10px 30px rgba(139, 92, 246, 0.15)"
+              }}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="ai-analysis-header">
+                <div className="ai-header-left">
+                  <span className="ai-eyebrow" style={{ color: "var(--accent-violet)" }}>
+                    <Layers size={14} />
+                    {clusterInfo.isClustered
+                      ? "SEMANTIC INCIDENT CLUSTERING COMPLETE"
+                      : "NEW UNIFIED INCIDENT INITIALIZED"}
+                  </span>
+                  <h2>{clusterInfo.incident.title}</h2>
+                </div>
+
+                <Link
+                  to="/incidents"
+                  className="nav-link-btn"
+                  style={{
+                    borderColor: "var(--accent-cyan)",
+                    color: "var(--accent-cyan-light)",
+                    background: "rgba(6, 182, 212, 0.1)"
+                  }}
+                >
+                  <span>Explore Incident & Micro-Protest ➔</span>
+                </Link>
+              </div>
+
+              <div className="ai-metrics-grid">
+                <div className="analysis-item">
+                  <span>Clustered Reports</span>
+                  <strong>{clusterInfo.incident.count || 1} Submissions</strong>
+                </div>
+
+                <div className="analysis-item warning">
+                  <span>Dynamic Priority</span>
+                  <strong>
+                    {clusterInfo.incident.priority_score} ({clusterInfo.incident.priority?.split(" - ")[0]})
+                  </strong>
+                </div>
+
+                <div className="analysis-item cyan">
+                  <span>Cluster Correlation</span>
+                  <strong>
+                    {clusterInfo.isClustered
+                      ? `${(clusterInfo.similarityScore * 100).toFixed(0)}% Match`
+                      : "Origin Root"}
+                  </strong>
+                </div>
+
+                <div className="analysis-item emerald">
+                  <span>Micro-Protest Demand</span>
+                  <strong>Active for Voting</strong>
+                </div>
+              </div>
+
+              <div className="ai-summary-box" style={{ borderColor: "rgba(139, 92, 246, 0.25)" }}>
+                <div className="ai-summary-title" style={{ color: "var(--accent-violet)" }}>
+                  <Users size={16} />
+                  <span>Public Demand Activated</span>
+                </div>
+                <p>
+                  This issue has been aggregated into the civic intelligence feed. Verified citizens can now one-tap
+                  support the collective demand without physical gathering.
+                </p>
               </div>
             </motion.section>
           )}
@@ -659,6 +885,17 @@ function Dashboard() {
         </section>
 
       </main>
+
+      {/* Citizen Identity Verification Modal */}
+      <VerifyModal
+        isOpen={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        user={user}
+        onVerified={(record) => {
+          setIsVerified(true);
+          setVerificationRecord(record);
+        }}
+      />
     </div>
   );
 }

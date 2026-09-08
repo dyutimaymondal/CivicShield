@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, User, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Shield, User, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
+import { rateLimiter, sanitizeInput, validateEmail, validatePassword } from "../lib/security";
 import "../auth.css";
 
 function Register() {
@@ -17,15 +18,43 @@ function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
+    // 1. Sanitize user inputs
+    const cleanName = sanitizeInput(name, 100);
+    const cleanEmail = sanitizeInput(email).toLowerCase();
+
+    if (!cleanName) {
+      setMessage("Please enter your full name.");
+      return;
+    }
+
+    if (!validateEmail(cleanEmail)) {
+      setMessage("Please enter a valid email address format.");
+      return;
+    }
+
+    // 2. Validate strict password policy (anti-brute-force defense)
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) {
+      setMessage(passwordCheck.error || "Password does not meet complexity requirements.");
+      return;
+    }
+
+    // 3. Client registration throttle (anti-bot defense: max 1 per 10s)
+    const cooldown = rateLimiter.checkCooldown("client_registration", 10);
+    if (!cooldown.allowed) {
+      setMessage(`Registration limit reached. Please wait ${cooldown.remainingSeconds}s before submitting.`);
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
     const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: cleanEmail,
+      password: password,
       options: {
         data: {
-          full_name: name,
+          full_name: cleanName,
         },
       },
     });
@@ -105,20 +134,23 @@ function Register() {
             </div>
 
             <div className="input-field-group">
-              <label htmlFor="register-password">Password (min. 6 characters)</label>
+              <label htmlFor="register-password">Password</label>
               <div className="input-icon-wrapper">
                 <input
                   id="register-password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Min. 8 chars (upper, lower, number, symbol)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  minLength={6}
                   autoComplete="new-password"
                   required
                 />
                 <Lock size={17} className="input-icon" />
               </div>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                <Info size={12} />
+                Requires 8+ characters, uppercase, lowercase, numbers & symbols.
+              </span>
             </div>
 
             <button type="submit" className="auth-submit-btn" disabled={loading}>

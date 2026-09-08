@@ -7,6 +7,8 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
+import Incidents from "./pages/Incidents.jsx";
+import AuthorityDashboard from "./pages/AuthorityDashboard.jsx";
 
 import "./index.css";
 
@@ -15,6 +17,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} />
+        <Route path="/incidents" element={<Incidents />} />
+        <Route path="/authority" element={<AuthorityDashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />

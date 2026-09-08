@@ -1,191 +1,232 @@
-# 🛡️ CivicShield — AI-Powered Civic Intelligence Platform
+# 🛡️ CivicShield — AI-Powered Civic Intelligence & Digital Micro-Protest Platform
 
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![OpenRouter](https://img.shields.io/badge/OpenRouter-Real_AI_LLM-6366F1?style=for-the-badge&logo=openai&logoColor=white)](https://openrouter.ai/)
 [![Supabase](https://img.shields.io/badge/Supabase-BaaS-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Leaflet](https://img.shields.io/badge/Leaflet-Cyber_Map-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/)
 [![Framer Motion](https://img.shields.io/badge/Framer_Motion-13.2-0055FF?style=for-the-badge&logo=framer&logoColor=white)](https://www.framer.com/motion/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-> **CivicShield** is a modern, cyber-civic intelligence infrastructure platform designed to bridge the gap between decentralized citizen complaints and municipal authority response. By combining real-time complaint intake, autonomous AI incident triage, duplicate detection clustering, and evidence storage, CivicShield turns fragmented neighborhood issues into validated, high-priority public works actions.
+> **CivicShield** is a verified civic intelligence and collective action platform built to convert scattered, unstructured citizen complaints into structured incidents, transparent priority ratings, and actionable municipal dispatch dossiers.
+>
+> Featuring the **Digital Micro-Protest** protocol, CivicShield enables authenticated citizens to back legitimate, non-violent civic demands with one-tap verified support—creating a measurable, noise-free civic signal that compels municipal accountability.
 
 ---
 
 ## 📑 Table of Contents
 
-- [Key Features](#-key-features)
-- [Architecture & Workflow Flowchart](#-architecture--workflow-flowchart)
-- [API Routes & Supabase Backend Services](#-api-routes--supabase-backend-services)
+- [Core Innovations](#-core-innovations)
+  - [1. Digital Micro-Protest (P0 Focus)](#1-digital-micro-protest-p0-focus)
+  - [2. Explainable Dynamic Priority Algorithm](#2-explainable-dynamic-priority-algorithm)
+  - [3. Real AI Pipeline via OpenRouter](#3-real-ai-pipeline-via-openrouter)
+  - [4. Interactive Cyber-Civic Leaflet Map](#4-interactive-cyber-civic-leaflet-map)
+  - [5. Municipal Authority Operations Command](#5-municipal-authority-operations-command)
+  - [6. Citizen Identity Verification (Aadhaar / Gov ID)](#6-citizen-identity-verification-aadhaar--gov-id)
+- [System Architecture & Lifecycle](#-system-architecture--lifecycle)
 - [Client Application Routes](#-client-application-routes)
-- [Database Schema](#-database-schema)
-- [Tech Stack](#-tech-stack)
+- [Database Schema & Migration](#-database-schema--migration)
+- [Security & Defensive Controls](#-security--defensive-controls)
 - [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
   - [Environment Variables](#environment-variables)
   - [Installation & Setup](#installation--setup)
   - [Running Locally](#running-locally)
-  - [Build & Lint](#build--lint)
+  - [Build & Code Quality](#build--code-quality)
 - [Contributing](#-contributing)
 - [License](#-license)
 
 ---
 
-## ⚡ Key Features
+## ⚡ Core Innovations
 
-- **🚨 Smart Citizen Reporting**: Citizens log issues with contextual descriptions, landmark geolocation, and direct photo evidence upload.
-- **🧠 Autonomous AI Triage**: Integrated Supabase Edge Function analyzes complaints in real time to categorize public works domains, evaluate risk severity, and produce dispatch-ready briefs.
-- **🔗 Duplicate Clustering**: Groups related municipal complaints within geographical zones to eliminate department triage redundancy.
-- **📊 Real-Time Operations Command**: Interactive citizen portal with live KPI metric ribbons, report status filters (`All`, `Pending`, `Resolved`), and neural assessment verification.
-- **🔐 Secure Authentication**: Supabase-powered session management, password reset recovery links, and user role separation.
-- **💎 Cyber-Civic Design System**: High-contrast obsidian dark mode, responsive glassmorphism panels, Lucide vector icons, and Framer Motion micro-interactions.
+### 1. Digital Micro-Protest (P0 Focus)
+
+Traditional civic platforms either ignore public demand or produce noisy, unverified comment sections. CivicShield implements a structured, constitutionally grounded **Digital Micro-Protest** mechanism:
+- **Grounded AI Demand Drafting**: Generates concise, actionable, non-threatening demands tied directly to clustered evidence and specific municipal departments.
+- **Strict One-Citizen-One-Vote**: Enforced transactionally in the database with `UNIQUE(micro_protest_id, citizen_id)` to eliminate artificial manipulation and astroturfing.
+- **Support Velocity Tracking**: Computes real-time 6-hour support acceleration (e.g., `+184 in last 6h`) to identify rapidly escalating public hazards.
+- **Non-Violent & Lawful by Design**: Pure digital petition mechanism; strictly avoids physical gathering, traffic obstruction, or public inconvenience.
 
 ---
 
-## 🔄 Architecture & Workflow Flowchart
+### 2. Explainable Dynamic Priority Algorithm
 
-The following diagram illustrates the lifecycle of a civic incident—from citizen submission to AI synthesis, database persistence, and authority resolution:
+Rather than relying on opaque black-box scoring, CivicShield computes incident priority using a mathematically transparent, audited 6-factor model:
+
+$$\text{Priority} = 0.25 \cdot S + 0.20 \cdot I + 0.20 \cdot V + 0.15 \cdot v_{6h} + 0.10 \cdot C + 0.10 \cdot E$$
+
+| Factor | Symbol | Weight | Description |
+| :--- | :---: | :---: | :--- |
+| **Severity** | $S$ | **25%** | Intrinsic hazard rating (Critical: 1.0, High: 0.8, Medium: 0.5, Low: 0.2) |
+| **Impact Scope** | $I$ | **20%** | Geographic reach (City-wide: 1.0, Ward-wide: 0.8, Neighborhood: 0.5, Local: 0.2) |
+| **Report Volume** | $V$ | **20%** | Log-normalized count of clustered citizen reports ($\log_{10}(1 + N) / 2$) |
+| **Support Velocity** | $v_{6h}$ | **15%** | Rate of new verified citizen supports over the past 6 hours |
+| **AI Confidence** | $C$ | **10%** | Neural classification confidence ($0.70 \to 0.99$) |
+| **Evidence Quality** | $E$ | **10%** | Ratio of verified photographic evidence uploads |
+
+> Citizens and municipal officers can toggle the **Inspect Algorithm Breakdown** view in any incident modal to review the exact percentage contribution of each factor.
+
+---
+
+### 3. Real AI Pipeline via OpenRouter
+
+CivicShield connects directly to [OpenRouter](https://openrouter.ai/) for real-time neural inference with zero vendor lock-in:
+- **Default Models**: Supports `nvidia/nemotron-3.5-lightning:free`, `google/gemini-2.0-flash-001`, `meta-llama/llama-3.3-70b-instruct`, `anthropic/claude-3.5-sonnet`, etc.
+- **Multi-Factor Triage (`analyzeCivicReportAsync`)**: Extracts category, sub-category, severity score, impact score, civic entities, and dispatch summary.
+- **Demand Synthesis (`generatePublicDemandAsync`)**: Drafts legitimate civic demands specifying explicit remedies and public works timelines.
+- **Authority Brief Synthesis (`generateAuthorityBriefAsync`)**: Synthesizes 4-step technical action checklists for field engineers and commissioners.
+- **Resilient Fallback Engine**: If the API key is missing or encounters rate limits, the platform instantly falls back to its deterministic local neural core with **zero crashes**.
+- **Model Attribution**: Badges in the UI (e.g. `⚡ nvidia/nemotron-3.5-lightning:free`) reflect the active neural inference engine.
+
+---
+
+### 4. Interactive Cyber-Civic Leaflet Map
+
+- Located at [`/incidents`](http://localhost:5173/incidents).
+- Utilizes **Leaflet** with CartoDB Dark Matter tiles.
+- Pins render animated pulsing halos (`pin-pulse`) color-coded by severity:
+  - 🔴 **Critical**: Vibrant Red pulse
+  - 🟠 **High**: Amber pulse
+  - 🔵 **Medium**: Cyan pulse
+  - 🟢 **Low**: Emerald pulse
+- Interactive popups allow one-click deep-dive into full incident telemetry.
+
+---
+
+### 5. Municipal Authority Operations Command
+
+- Located at [`/authority`](http://localhost:5173/authority).
+- **Triage Queue**: Automatically sorted by Dynamic Priority score.
+- **Department Filters**: Public Works (PWD), Water & Sewerage (Jal Board), Electricity Board, Sanitation.
+- **AI Authority Brief & Dispatch Dossier**: Displays verified citizen demand, support telemetry, and a 4-step municipal action checklist.
+- **One-Click Action Adoption**: Copies AI recommendations into official dispatch notes.
+- **Live Citizen Feed Sync**: Publishing status updates (`IN_PROGRESS`, `RESOLVED`) instantly updates the public citizen portal.
+
+---
+
+### 6. Citizen Identity Verification (Aadhaar / Gov ID)
+
+- **Sybil Resistance**: Ensures only authenticated individuals can vote on Micro-Protests.
+- **Verification Flow**: 12-digit format mask $\to$ OTP generation simulation $\to$ verification validation $\to$ persistent cryptographic token badge issuance.
+- **Demo Auto-Fill**: One-click demo verification with test OTP `123456`.
+
+---
+
+## 🔄 System Architecture & Lifecycle
 
 ```mermaid
 flowchart TD
-    subgraph Client["🖥️ Citizen Client Portal (React 19 + Vite)"]
-        A[Citizen Enters Complaint] --> B{Valid Form?}
-        B -- No --> C[Display Inline Validation]
-        B -- Yes --> D[Trigger Incident Submission]
-    end
+    A["Verified Citizen\n(Text + Photo + GPS)"] --> B["AI Understanding\n(OpenRouter LLM / Heuristic Engine)"]
+    B --> C["Semantic Clustering\n(Keyword Jaccard + Geo Proximity)"]
+    C --> D["Unified Incident\n(Aggregated Reports & Evidence)"]
+    D --> E["Dynamic Priority Engine\n(PRD 6-Factor Formula)"]
+    E --> F["AI Public Demand Draft\n(Grounded in Evidence)"]
+    F --> G["Digital Micro-Protest\n(One-Tap Verified Support)"]
+    G --> H["AI Authority Brief & Telemetry\n(Collective Demand + Velocity)"]
+    H --> I["Municipal Action & Resolution\n(Dispatch Crews + Official Response)"]
 
-    subgraph Supabase["⚡ Supabase Backend Infrastructure"]
-        D -->|1. POST description| E["Supabase Edge Function: analyze-report"]
-        E -->|AI Inference| F[Categorize Issue & Severity Score]
-        F -->|Return Assessment JSON| D
-
-        D -->|2. Binary Photo Upload| G["Supabase Storage: report-photos"]
-        G -->|Generate Public CDN URL| H[photo_url]
-
-        D -->|3. Structured Insert| I["Supabase PostgreSQL: reports table"]
-        H --> I
-    end
-
-    subgraph Authority["🏛️ Municipal Authority & Feedback Loop"]
-        I --> J["Municipal Dashboard / Dispatch Queue"]
-        J --> K[Deploy Repair Crews]
-        K --> L[Update Status to 'Resolved']
-        L --> M["Real-Time Citizen Feed Update (Refetched)"]
-    end
-
-    style Client fill:#0b1322,stroke:#06b6d4,stroke-width:2px,color:#f8fafc
-    style Supabase fill:#07111f,stroke:#10b981,stroke-width:2px,color:#f8fafc
-    style Authority fill:#101a2e,stroke:#f59e0b,stroke-width:2px,color:#f8fafc
+    style A fill:#0b1322,stroke:#06b6d4,stroke-width:2px,color:#f8fafc
+    style B fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#f8fafc
+    style D fill:#07111f,stroke:#8b5cf6,stroke-width:2px,color:#f8fafc
+    style G fill:#071a1f,stroke:#10b981,stroke-width:2px,color:#f8fafc
+    style I fill:#101a2e,stroke:#f59e0b,stroke-width:2px,color:#f8fafc
 ```
-
----
-
-## 🌐 API Routes & Supabase Backend Services
-
-CivicShield utilizes Supabase Edge Functions, Auth APIs, PostgreSQL Database RPCs, and Object Storage.
-
-### 1. AI Analysis Edge Function
-
-Invoked during the submission workflow to categorize and rate complaints.
-
-- **Function Name**: `analyze-report`
-- **Client Invocation**:
-  ```javascript
-  const { data, error } = await supabase.functions.invoke("analyze-report", {
-    body: { description: userDescription }
-  });
-  ```
-- **Request Payload**:
-  ```json
-  {
-    "description": "Large pothole on 4th cross road causing hazardous vehicle swerving."
-  }
-  ```
-- **Response Structure**:
-  ```json
-  {
-    "issue": "Major Road Surface Damage",
-    "category": "Roads & Transportation",
-    "severity": "High",
-    "priority": "P1 - Immediate Dispatch",
-    "summary": "Severe pothole cluster on primary thoroughfare posing vehicular damage risk."
-  }
-  ```
-
----
-
-### 2. Supabase Storage: `report-photos`
-
-Used to store photographic proof uploaded by citizens.
-
-- **Bucket Name**: `report-photos`
-- **Access Level**: Public Read, Authenticated Upload
-- **Path Convention**: `{user_id}/{timestamp}.{ext}`
-- **Storage Workflow**:
-  ```javascript
-  // 1. Upload file binary
-  await supabase.storage
-    .from("report-photos")
-    .upload(`${user.id}/${Date.now()}.${fileExtension}`, photoFile);
-
-  // 2. Retrieve public access URL
-  const { data } = supabase.storage
-    .from("report-photos")
-    .getPublicUrl(filePath);
-  ```
-
----
-
-### 3. Supabase Authentication Methods
-
-| Action | Supabase Client Method | Redirect Target | Description |
-| :--- | :--- | :--- | :--- |
-| **Sign In** | `supabase.auth.signInWithPassword({ email, password })` | `/dashboard` | Authenticates existing citizen session |
-| **Sign Up** | `supabase.auth.signUp({ email, password, options: { data: { full_name } } })` | `/` (on session) | Registers citizen with profile metadata |
-| **Forgot Password** | `supabase.auth.resetPasswordForEmail(email, { redirectTo })` | Email Link ➔ `/reset-password` | Sends secure recovery link to citizen's inbox |
-| **Update Password** | `supabase.auth.updateUser({ password })` | `/login` | Commits updated password for authenticated session |
-| **Sign Out** | `supabase.auth.signOut()` | `/login` | Invalidates tokens and terminates local session |
 
 ---
 
 ## 🧭 Client Application Routes
 
-| Path | Component | View Description |
+| Path | Component | Description |
 | :--- | :--- | :--- |
-| `/` | [`App.jsx`](src/App.jsx) | Public Landing Page featuring hero telemetry, live incident ticker, features grid, civic workflow timeline, and footer |
-| `/login` | [`Login.jsx`](src/pages/Login.jsx) | Citizen sign-in terminal with floating glassmorphism card and password recovery trigger |
-| `/register` | [`Register.jsx`](src/pages/Register.jsx) | Account creation terminal with input validation and security helper text |
-| `/reset-password` | [`ResetPassword.jsx`](src/pages/ResetPassword.jsx) | Secure credential update page for users redirected via email recovery tokens |
-| `/dashboard` | [`Dashboard.jsx`](src/pages/Dashboard.jsx) | Citizen Command Portal with live metric stats, report submission dropzone, AI telemetry card, and filtered incident cards |
+| `/` | [`App.jsx`](src/App.jsx) | Landing page with hero telemetry, live ticker, feature highlights, and civic timeline |
+| `/dashboard` | [`Dashboard.jsx`](src/pages/Dashboard.jsx) | Citizen command terminal: incident reporting, photo upload, AI triage review, and cluster feedback |
+| `/incidents` | [`Incidents.jsx`](src/pages/Incidents.jsx) | Public explorer with interactive CartoDB Leaflet map, search, category filters, and Micro-Protest cards |
+| `/authority` | [`AuthorityDashboard.jsx`](src/pages/AuthorityDashboard.jsx) | Municipal dispatch command: priority queue, AI action checklist, status updating, and official replies |
+| `/login` | [`Login.jsx`](src/pages/Login.jsx) | Citizen sign-in terminal with brute-force lockout protection |
+| `/register` | [`Register.jsx`](src/pages/Register.jsx) | Citizen account registration with password complexity helper |
+| `/reset-password` | [`ResetPassword.jsx`](src/pages/ResetPassword.jsx) | Credential recovery update page |
 
 ---
 
-## 🗄️ Database Schema
+## 🗄️ Database Schema & Migration
 
-### Table: `reports`
+Database migration script located at [`supabase/migrations/20260908_civic_intelligence_micro_protest.sql`](supabase/migrations/20260908_civic_intelligence_micro_protest.sql).
 
-| Column | Data Type | Constraints | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | `uuid` | Primary Key, `default gen_random_uuid()` | Unique record identifier |
-| `user_id` | `uuid` | Foreign Key `auth.users(id)` | Author citizen user ID |
-| `title` | `text` | Nullable | User-provided or AI-synthesized incident headline |
-| `description` | `text` | Not Null | Detailed citizen complaint narrative |
-| `category` | `text` | Nullable | Assigned municipal department domain |
-| `location` | `text` | Nullable | Street address, landmark, or coordinates |
-| `photo_url` | `text` | Nullable | Public URL from `report-photos` bucket |
-| `status` | `text` | Default `'pending'` | Incident state: `'pending'` \| `'resolved'` |
-| `severity` | `text` | Nullable | Risk evaluation: `'Low'` \| `'Medium'` \| `'High'` \| `'Critical'` |
-| `created_at` | `timestamptz`| `default now()` | Timestamp of incident intake |
+### Key Entities
+
+```mermaid
+erDiagram
+    REPORTS ||--o{ INCIDENTS : "clustered into"
+    INCIDENTS ||--o| MICRO_PROTESTS : "initiates"
+    MICRO_PROTESTS ||--o{ MICRO_PROTEST_SUPPORT : "receives"
+    INCIDENTS ||--o{ AUDIT_EVENTS : "tracks"
+
+    REPORTS {
+        uuid id PK
+        uuid user_id FK
+        text title
+        text description
+        text category
+        text severity
+        text photo_url
+        float latitude
+        float longitude
+        timestamptz created_at
+    }
+
+    INCIDENTS {
+        text id PK
+        text title
+        text description
+        text category
+        text severity
+        text priority
+        float priority_score
+        jsonb priority_breakdown
+        int count
+        int velocity_6h
+        text status
+        text official_response
+    }
+
+    MICRO_PROTESTS {
+        text id PK
+        text incident_id FK
+        text title
+        text demand_text
+        text status
+        int support_count
+        int unique_support_count
+        int velocity_6h
+        jsonb demand_provenance
+    }
+
+    MICRO_PROTEST_SUPPORT {
+        text id PK
+        text micro_protest_id FK
+        text citizen_id
+        timestamptz created_at
+    }
+```
 
 ---
 
-## 🛠️ Tech Stack
+## 🔒 Security & Defensive Controls
 
-- **Core Framework**: [React 19](https://react.dev/) + [Vite 8](https://vitejs.dev/)
-- **Routing**: [React Router v7](https://reactrouter.com/)
-- **Backend & Database**: [Supabase](https://supabase.com/) (PostgreSQL, Supabase Auth, Storage, Edge Functions)
-- **Styling**: Cyber-Civic Vanilla CSS Architecture (CSS Variables, Flexbox, CSS Grid, Glassmorphism)
-- **Vector Icons**: [Lucide React](https://lucide.dev/)
-- **Animations**: [Framer Motion 13](https://www.framer.com/motion/)
-- **Linter & Code Quality**: [Oxlint](https://oxc.rs/)
+1. **Strict Environment Secret Isolation**:
+   - All API keys and model parameters are kept in `.env.local` and never committed to source control.
+   - [`.gitignore`](.gitignore) explicitly blocks `.env`, `.env.local`, and `*.local`.
+2. **Brute-Force & Credential Stuffing Defense**:
+   - Exponential backoff lockout (30s $\to$ 2min $\to$ 15min) with live countdown timer.
+3. **Sybil Resistance & Anti-Astroturfing**:
+   - Identity verification check before accepting Micro-Protest support.
+   - Database `UNIQUE` constraint preventing duplicate voting.
+4. **SQL & XSS Sanitization**:
+   - Multi-layer regex sanitizer (`sanitizeInput`) stripping SQL keywords, HTML tags, and null bytes.
+5. **Photo Upload Hardening**:
+   - Strict MIME validation allowlist (`image/jpeg`, `image/png`, `image/webp`).
+   - Rejection of SVG vectors and binaries; 5MB payload boundary.
 
 ---
 
@@ -193,70 +234,64 @@ Used to store photographic proof uploaded by citizens.
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18.0 or higher recommended)
-- [npm](https://www.npmjs.com/) or [pnpm](https://pnpm.io/)
+- [Node.js](https://nodejs.org/) (v18.0 or higher)
+- [npm](https://www.npmjs.com/)
 - A [Supabase Project](https://supabase.com/) instance
+- *(Optional)* An [OpenRouter API Key](https://openrouter.ai/keys) for live LLM reasoning
 
 ---
 
 ### Environment Variables
 
-Create a `.env.local` file in the root directory:
+Copy `.env.example` to `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+Populate your credentials in `.env.local`:
 
 ```env
-VITE_SUPABASE_URL=https://your-supabase-project.supabase.co
+VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+
+# OpenRouter Real AI Integration (Optional but recommended)
+VITE_OPENROUTER_API_KEY=sk-or-v1-your-key-here
+VITE_OPENROUTER_MODEL=nvidia/nemotron-3.5-lightning:free
 ```
 
 ---
 
 ### Installation & Setup
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/dyutimaymondal/CivicShield.git
-   cd CivicShield
-   ```
-
-2. **Install project dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Verify Environment Setup**:
-   Ensure `.env.local` contains your active Supabase URL and Publishable Key.
+```bash
+git clone https://github.com/dyutimaymondal/CivicShield.git
+cd CivicShield
+npm install
+```
 
 ---
 
 ### Running Locally
 
-Start the local development server with Hot Module Replacement (HMR):
-
 ```bash
 npm run dev
 ```
 
-Open your browser and navigate to:
-```
-http://localhost:5173
-```
+Navigate to: `http://localhost:5173`
 
 ---
 
-### Build & Lint
+### Build & Code Quality
 
-To build the production-ready bundle:
 ```bash
+# High-speed static analysis (0 warnings, 0 errors target)
+npx oxlint
+
+# Production build
 npm run build
-```
 
-To run the high-speed code linter:
-```bash
-npm run lint
-```
-
-To preview the production build locally:
-```bash
+# Preview production build locally
 npm run preview
 ```
 
@@ -264,11 +299,9 @@ npm run preview
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome!
-
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m "feat: Add AmazingFeature"`)
+3. Commit your changes (`git commit -m "feat: implement AmazingFeature"`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
@@ -276,4 +309,4 @@ Contributions, issues, and feature requests are welcome!
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.

@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { KeyRound, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { KeyRound, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
+import { rateLimiter, validatePassword } from "../lib/security";
 import "../auth.css";
 
 function ResetPassword() {
@@ -26,8 +27,17 @@ function ResetPassword() {
       return;
     }
 
-    if (password.length < 6) {
-      setMessage("Password must be at least 6 characters.");
+    // Enforce password policy
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) {
+      setMessage(passwordCheck.error || "Password does not meet complexity requirements.");
+      return;
+    }
+
+    // Rate limit password update attempts (anti-brute-force defense)
+    const cooldown = rateLimiter.checkCooldown("password_reset_submit", 15);
+    if (!cooldown.allowed) {
+      setMessage(`Too many update requests. Please wait ${cooldown.remainingSeconds}s before trying again.`);
       return;
     }
 
@@ -77,7 +87,7 @@ function ResetPassword() {
 
           <form onSubmit={handleReset} className="auth-form">
             <div className="input-field-group">
-              <label htmlFor="reset-new-password">New Password (min. 6 characters)</label>
+              <label htmlFor="reset-new-password">New Password</label>
               <div className="input-icon-wrapper">
                 <input
                   id="reset-new-password"
@@ -89,6 +99,10 @@ function ResetPassword() {
                 />
                 <Lock size={17} className="input-icon" />
               </div>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                <Info size={12} />
+                Requires 8+ characters, uppercase, lowercase, numbers & symbols.
+              </span>
             </div>
 
             <div className="input-field-group">

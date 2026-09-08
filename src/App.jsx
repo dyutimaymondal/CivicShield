@@ -51,11 +51,11 @@ function App() {
 
           <div className="nav-links">
             <a href="#home" className="nav-link">Home</a>
-            <a href="#features" className="nav-link">Features</a>
+            <Link to="/incidents" className="nav-link">Public Incidents</Link>
+            <Link to="/authority" className="nav-link" style={{ color: "var(--accent-amber)" }}>Authority Command</Link>
             <a href="#workflow" className="nav-link">Workflow</a>
-            <a href="#about" className="nav-link">About</a>
-            <Link to="/login" className="login-btn">
-              <span>Access Portal</span>
+            <Link to="/dashboard" className="login-btn">
+              <span>Citizen Portal</span>
               <ArrowRight size={15} />
             </Link>
           </div>
@@ -77,7 +77,7 @@ function App() {
               <span className="beacon-ping" />
             </div>
             <Sparkles size={14} className="badge-icon" />
-            <span>AI-POWERED CIVIC INTELLIGENCE ENGINE</span>
+            <span>AI-POWERED CIVIC INTELLIGENCE & MICRO-PROTEST ENGINE</span>
           </motion.div>
 
           <motion.h1
@@ -98,8 +98,8 @@ function App() {
             animate="visible"
             custom={2}
           >
-            Report community issues, automatically detect and link duplicate complaints,
-            and transform fragmented public concerns into validated, high-priority incidents for municipal authorities.
+            Report community issues, automatically detect and link duplicate complaints into unified incidents,
+            and empower verified citizens to back public demands through <strong>Digital Micro-Protests</strong>.
           </motion.p>
 
           <motion.div
@@ -114,10 +114,11 @@ function App() {
               <span>Report a Problem</span>
             </Link>
 
-            <a href="#features" className="secondary-btn">
-              <span>Explore Features</span>
+            <Link to="/incidents" className="secondary-btn">
+              <Users size={16} />
+              <span>Explore Public Demands</span>
               <ChevronRight size={16} />
-            </a>
+            </Link>
           </motion.div>
 
           {/* Live System Statistics */}
@@ -179,50 +180,56 @@ function App() {
             </div>
 
             {/* Incident 1 */}
-            <motion.div
-              className="incident high-risk"
-              whileHover={{ y: -3, transition: { duration: 0.2 } }}
-            >
-              <div className="incident-icon-box danger">
-                <AlertTriangle size={20} />
-              </div>
-
-              <div className="incident-info">
-                <div className="incident-headline">
-                  <h3>Major Road Damage</h3>
-                  <span className="incident-time">3m ago</span>
+            <Link to="/incidents" style={{ textDecoration: "none", color: "inherit" }}>
+              <motion.div
+                className="incident high-risk"
+                whileHover={{ y: -3, transition: { duration: 0.2 } }}
+              >
+                <div className="incident-icon-box danger">
+                  <AlertTriangle size={20} />
                 </div>
-                <p>Multiple road fracture reports detected at Sector 4 corridor.</p>
 
-                <div className="tags">
-                  <span className="tag tag-danger">HIGH PRIORITY</span>
-                  <span className="tag tag-neutral">18 REPORTS CLUSTERED</span>
+                <div className="incident-info">
+                  <div className="incident-headline">
+                    <h3>Major Road Surface Fracture</h3>
+                    <span className="incident-time">3m ago</span>
+                  </div>
+                  <p>86 road fracture reports clustered at Sector 4 corridor. 1,248 citizens supporting demand.</p>
+
+                  <div className="tags">
+                    <span className="tag tag-danger">PRIORITY: 0.820</span>
+                    <span className="tag tag-neutral">86 REPORTS CLUSTERED</span>
+                    <span className="tag" style={{ background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-emerald)" }}>1,248 MICRO-PROTEST VOTES</span>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </Link>
 
             {/* Incident 2 */}
-            <motion.div
-              className="incident medium-risk"
-              whileHover={{ y: -3, transition: { duration: 0.2 } }}
-            >
-              <div className="incident-icon-box warning">
-                <Trash2 size={20} />
-              </div>
-
-              <div className="incident-info">
-                <div className="incident-headline">
-                  <h3>Garbage Overflow</h3>
-                  <span className="incident-time">14m ago</span>
+            <Link to="/incidents" style={{ textDecoration: "none", color: "inherit" }}>
+              <motion.div
+                className="incident medium-risk"
+                whileHover={{ y: -3, transition: { duration: 0.2 } }}
+              >
+                <div className="incident-icon-box warning">
+                  <Trash2 size={20} />
                 </div>
-                <p>Public sanitation cluster identified near market transit plaza.</p>
 
-                <div className="tags">
-                  <span className="tag tag-warning">MEDIUM SEVERITY</span>
-                  <span className="tag tag-neutral">11 REPORTS CLUSTERED</span>
+                <div className="incident-info">
+                  <div className="incident-headline">
+                    <h3>Hazardous Sewage Overflow</h3>
+                    <span className="incident-time">14m ago</span>
+                  </div>
+                  <p>Contaminated drainage overflow at Ward 12 corridor. 892 citizens supporting demand.</p>
+
+                  <div className="tags">
+                    <span className="tag tag-warning">CRITICAL SEVERITY</span>
+                    <span className="tag tag-neutral">54 REPORTS CLUSTERED</span>
+                    <span className="tag" style={{ background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-emerald)" }}>892 MICRO-PROTEST VOTES</span>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </Link>
 
             {/* AI Engine Status Terminal */}
             <div className="ai-status">
@@ -314,7 +321,7 @@ function App() {
             <div className="step-number">01</div>
             <div className="step-icon-wrap"><Users size={22} /></div>
             <h3>Citizen Reports</h3>
-            <p>A resident observes a problem, takes a photo, and submits a report via the citizen dashboard.</p>
+            <p>A resident observes a problem, captures photos, and submits a complaint with GPS location.</p>
           </div>
 
           <div className="step-connector">
@@ -325,8 +332,22 @@ function App() {
           <div className="step-card highlight">
             <div className="step-number">02</div>
             <div className="step-icon-wrap"><Sparkles size={22} /></div>
-            <h3>AI Intelligence Analysis</h3>
-            <p>CivicShield evaluates severity, checks for surrounding duplicates, and synthesizes an actionable dispatch report.</p>
+            <h3>AI Incident Clustering</h3>
+            <p>Duplicate complaints are semantically unified into one incident, calculating dynamic priority and drafting a public demand.</p>
+          </div>
+
+          <div className="step-connector">
+            <div className="connector-line" />
+            <ArrowRight size={18} className="connector-arrow" />
+          </div>
+
+          <div className="step-card highlight" style={{ borderColor: "rgba(16, 185, 129, 0.4)" }}>
+            <div className="step-number" style={{ color: "var(--accent-emerald)" }}>03</div>
+            <div className="step-icon-wrap" style={{ background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-emerald)" }}>
+              <ShieldCheck size={22} />
+            </div>
+            <h3>Digital Micro-Protest</h3>
+            <p>Verified citizens one-tap support legitimate demands without physical gathering, signaling real community urgency.</p>
           </div>
 
           <div className="step-connector">
@@ -335,10 +356,10 @@ function App() {
           </div>
 
           <div className="step-card">
-            <div className="step-number">03</div>
+            <div className="step-number">04</div>
             <div className="step-icon-wrap"><Building2 size={22} /></div>
             <h3>Authority Resolution</h3>
-            <p>Municipal departments deploy repair crews, track progress, and mark the issue as verified and resolved.</p>
+            <p>Municipal departments inspect AI briefs, deploy field repair crews, and publish transparent progress.</p>
           </div>
         </div>
       </section>
@@ -397,9 +418,11 @@ function App() {
             </div>
             <div className="footer-col">
               <h4>Portals</h4>
+              <Link to="/incidents">Public Incidents & Demands</Link>
+              <Link to="/dashboard">Citizen Command Portal</Link>
+              <Link to="/authority">Authority Dispatch Console</Link>
               <Link to="/login">Citizen Login</Link>
               <Link to="/register">Create Account</Link>
-              <Link to="/dashboard">Citizen Dashboard</Link>
             </div>
           </div>
         </div>
