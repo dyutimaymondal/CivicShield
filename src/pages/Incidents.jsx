@@ -12,7 +12,8 @@ import {
   TrendingUp,
   Building2,
   ChevronRight,
-  Radio
+  Radio,
+  Megaphone
 } from "lucide-react";
 import { authStore } from "../lib/authStore";
 import { civicStore } from "../lib/civicStore";
@@ -27,6 +28,7 @@ export default function Incidents() {
   const [microProtests, setMicroProtests] = useState(() => civicStore.getMicroProtests());
   const [user, setUser] = useState(null);
   const [isVerified, setIsVerified] = useState(false);
+  const [activeBroadcasts, setActiveBroadcasts] = useState(() => civicStore.getActiveBroadcastAnnouncements());
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -59,6 +61,7 @@ export default function Incidents() {
     const unsubscribe = civicStore.subscribe(() => {
       setIncidents(civicStore.getIncidents());
       setMicroProtests(civicStore.getMicroProtests());
+      setActiveBroadcasts(civicStore.getActiveBroadcastAnnouncements());
     });
 
     return () => {
@@ -117,9 +120,9 @@ export default function Incidents() {
           <Link to="/" className="nav-link-btn">Home</Link>
           <Link to="/incidents" className="nav-link-btn active">Public Incidents</Link>
           <Link to="/dashboard" className="nav-link-btn">Citizen Portal</Link>
-          <Link to="/authority" className="nav-link-btn authority-btn">
+          <Link to="/government" className="nav-link-btn authority-btn" style={{ borderColor: "#f59e0b", color: "#fde68a" }}>
             <Building2 size={14} />
-            <span>Authority Command</span>
+            <span>Gov Portal 🏛️</span>
           </Link>
 
           {isVerified ? (
@@ -142,6 +145,62 @@ export default function Incidents() {
 
       {/* Main Container */}
       <main className="incidents-container">
+        {/* ACTIVE GOVERNMENT EMERGENCY BROADCAST BANNER */}
+        {activeBroadcasts.length > 0 && (
+          <div style={{
+            background: activeBroadcasts[0].severity === "EMERGENCY"
+              ? "linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(185, 28, 28, 0.25) 100%)"
+              : "linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.2) 100%)",
+            border: activeBroadcasts[0].severity === "EMERGENCY"
+              ? "1px solid rgba(239, 68, 68, 0.5)"
+              : "1px solid rgba(245, 158, 11, 0.45)",
+            borderRadius: "12px",
+            padding: "14px 20px",
+            marginBottom: "24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            boxShadow: "0 6px 25px rgba(0, 0, 0, 0.4)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "10px",
+                background: "rgba(0, 0, 0, 0.25)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: activeBroadcasts[0].severity === "EMERGENCY" ? "#fca5a5" : "#fde68a",
+                flexShrink: 0
+              }}>
+                <Megaphone size={20} />
+              </div>
+              <div>
+                <span style={{
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  letterSpacing: "0.05em",
+                  color: activeBroadcasts[0].severity === "EMERGENCY" ? "#fca5a5" : "#fde68a",
+                  textTransform: "uppercase"
+                }}>
+                  🏛️ OFFICIAL MUNICIPAL NOTICE • {activeBroadcasts[0].department}
+                </span>
+                <h4 style={{ margin: "2px 0 3px", fontSize: "14px", fontWeight: 800, color: "#ffffff" }}>
+                  {activeBroadcasts[0].title}
+                </h4>
+                <p style={{ margin: 0, fontSize: "12px", color: "#e2e8f0", lineHeight: 1.4 }}>
+                  {activeBroadcasts[0].message}
+                </p>
+              </div>
+            </div>
+            <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+              Public Signal Active
+            </span>
+          </div>
+        )}
+
         {/* Page Hero */}
         <section className="incidents-hero">
           <div className="hero-eyebrow">

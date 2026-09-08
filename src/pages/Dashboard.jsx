@@ -25,7 +25,8 @@ import {
   Users,
   Building2,
   Navigation,
-  ArrowRight
+  ArrowRight,
+  Megaphone
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { authStore } from "../lib/authStore";
@@ -57,6 +58,7 @@ function Dashboard() {
   const [_verificationRecord, setVerificationRecord] = useState(null);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showOnboardingPrompt, setShowOnboardingPrompt] = useState(false);
+  const [activeBroadcasts, setActiveBroadcasts] = useState(() => civicStore.getActiveBroadcastAnnouncements());
 
   // Get logged-in user & enforce strict authentication
   useEffect(() => {
@@ -113,9 +115,20 @@ function Dashboard() {
     };
     window.addEventListener("civicshield_verification_updated", handleVerifyEvent);
 
+    const unsubscribeStore = civicStore.subscribe(() => {
+      if (isMounted) {
+        setActiveBroadcasts(civicStore.getActiveBroadcastAnnouncements());
+        const sess = authStore.getStoredSession();
+        if (sess?.user?.id) {
+          fetchReports(sess.user.id);
+        }
+      }
+    });
+
     return () => {
       isMounted = false;
       subscription?.unsubscribe();
+      unsubscribeStore();
       window.removeEventListener("civicshield_verification_updated", handleVerifyEvent);
     };
   }, [navigate]);
@@ -391,9 +404,9 @@ function Dashboard() {
             <span>Public Incidents</span>
           </Link>
 
-          <Link to="/authority" className="nav-link-btn authority-btn">
+          <Link to="/government" className="nav-link-btn authority-btn" style={{ borderColor: "#f59e0b", color: "#fde68a" }}>
             <Building2 size={14} />
-            <span>Authority Command</span>
+            <span>Gov Portal 🏛️</span>
           </Link>
 
           {isVerified ? (
@@ -435,6 +448,62 @@ function Dashboard() {
 
       {/* MAIN CONTAINER */}
       <main className="dashboard-container">
+
+        {/* ACTIVE GOVERNMENT EMERGENCY BROADCAST BANNER */}
+        {activeBroadcasts.length > 0 && (
+          <div style={{
+            background: activeBroadcasts[0].severity === "EMERGENCY"
+              ? "linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(185, 28, 28, 0.25) 100%)"
+              : "linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.2) 100%)",
+            border: activeBroadcasts[0].severity === "EMERGENCY"
+              ? "1px solid rgba(239, 68, 68, 0.5)"
+              : "1px solid rgba(245, 158, 11, 0.45)",
+            borderRadius: "12px",
+            padding: "16px 20px",
+            marginBottom: "24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            boxShadow: "0 6px 25px rgba(0, 0, 0, 0.4)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "10px",
+                background: "rgba(0, 0, 0, 0.25)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: activeBroadcasts[0].severity === "EMERGENCY" ? "#fca5a5" : "#fde68a",
+                flexShrink: 0
+              }}>
+                <Megaphone size={22} />
+              </div>
+              <div>
+                <span style={{
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  letterSpacing: "0.05em",
+                  color: activeBroadcasts[0].severity === "EMERGENCY" ? "#fca5a5" : "#fde68a",
+                  textTransform: "uppercase"
+                }}>
+                  🏛️ OFFICIAL GOVERNMENT CIVIC ADVISORY • {activeBroadcasts[0].department}
+                </span>
+                <h4 style={{ margin: "2px 0 4px", fontSize: "15px", fontWeight: 800, color: "#ffffff" }}>
+                  {activeBroadcasts[0].title}
+                </h4>
+                <p style={{ margin: 0, fontSize: "13px", color: "#e2e8f0", lineHeight: 1.4 }}>
+                  {activeBroadcasts[0].message}
+                </p>
+              </div>
+            </div>
+            <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+              Active Notice
+            </span>
+          </div>
+        )}
 
         {/* WELCOME BANNER */}
         <section className="dashboard-welcome">
@@ -869,7 +938,27 @@ function Dashboard() {
                 >
                   <div className="report-card-content">
                     <div className="report-card-header">
-                      <h3>{report.title || "Civic Issue Report"}</h3>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                        <h3>{report.title || "Civic Issue Report"}</h3>
+                        {report.government_verified && (
+                          <span style={{
+                            background: "rgba(245, 158, 11, 0.15)",
+                            border: "1px solid rgba(245, 158, 11, 0.4)",
+                            borderRadius: "4px",
+                            padding: "2px 8px",
+                            color: "#fbbf24",
+                            fontSize: "11px",
+                            fontWeight: 800,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px"
+                          }} title={`Officially verified by ${report.verified_by || "Municipal Official"}`}>
+                            <ShieldCheck size={12} />
+                            <span>Gov Verified 🏛️</span>
+                          </span>
+                        )}
+                      </div>
+
                       <span className={`status-badge ${report.status === "pending" ? "pending" : report.status === "resolved" ? "resolved" : "other"}`}>
                         {report.status === "pending" ? (
                           <>
@@ -894,6 +983,31 @@ function Dashboard() {
                     )}
 
                     <p className="report-description">{report.description}</p>
+
+                    {/* OFFICIAL WORK COMMENCEMENT ANNOUNCEMENT BOX */}
+                    {report.official_announcement && (
+                      <div style={{
+                        background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.05) 100%)",
+                        border: "1px solid rgba(245, 158, 11, 0.35)",
+                        borderRadius: "8px",
+                        padding: "10px 14px",
+                        margin: "10px 0"
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#fbbf24", fontSize: "11px", fontWeight: 700, textTransform: "uppercase" }}>
+                          <Megaphone size={13} />
+                          <span>Official Municipal Response to Citizens</span>
+                        </div>
+                        <p style={{ margin: "4px 0 0", color: "#f8fafc", fontSize: "12px", lineHeight: 1.4 }}>
+                          {report.official_announcement}
+                        </p>
+                        {(report.crew_assigned || report.eta) && (
+                          <div style={{ display: "flex", gap: "12px", marginTop: "6px", fontSize: "11px", color: "#94a3b8" }}>
+                            {report.crew_assigned && <span>Crew: <strong style={{ color: "#e2e8f0" }}>{report.crew_assigned}</strong></span>}
+                            {report.eta && <span>Target ETA: <strong style={{ color: "#fbbf24" }}>{report.eta}</strong></span>}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {report.location && (
                       <div className="report-location">

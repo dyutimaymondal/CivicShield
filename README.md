@@ -94,14 +94,28 @@ CivicShield connects directly to [OpenRouter](https://openrouter.ai/) for real-t
 
 ---
 
-### 5. Municipal Authority Operations Command
+### 5. Specialized Government Operations Command Portal
 
-- Located at [`/authority`](http://localhost:5173/authority).
-- **Triage Queue**: Automatically sorted by Dynamic Priority score.
-- **Department Filters**: Public Works (PWD), Water & Sewerage (Jal Board), Electricity Board, Sanitation.
-- **AI Authority Brief & Dispatch Dossier**: Displays verified citizen demand, support telemetry, and a 4-step municipal action checklist.
-- **One-Click Action Adoption**: Copies AI recommendations into official dispatch notes.
-- **Live Citizen Feed Sync**: Publishing status updates (`IN_PROGRESS`, `RESOLVED`) instantly updates the public citizen portal.
+- Located at [`/government`](http://localhost:5173/government) (and [`/authority`](http://localhost:5173/authority)).
+- **Restricted Government Official Authentication Gate**:
+  - Secure verification against seeded municipal officer credentials in `.env`.
+  - **1-Click Demo Helper**: Autofills official credentials for instant evaluator testing.
+  - **Seeded Official Credentials**:
+    - **Official ID**: `GOV-OFFICER-7042`
+    - **Email**: `officer.sharma@pwd.delhi.gov.in`
+    - **Password**: `GovShield#Secure2026!`
+    - **Department**: `Public Works Department (PWD)`
+    - **Officer**: `Er. Rajesh Sharma (Chief Municipal Engineer)`
+- **Citizen Posts & Reports Queue**:
+  - Review all citizen submissions with full photo evidence, timestamps, and GPS coordinates.
+  - **Verify Post (1-Click)**: Grants an official **Gov Verified 🏛️** badge stamped with officer name and timestamp.
+  - **Mention / Set Priority**: Override or set priority (P0 - Emergency Dispatch, P1 - Urgent Municipal Attention, P2 - Standard, P3 - Routine) with official justification.
+  - **Announce Work to Citizens**: Broadcast official status announcements (e.g. *"Field repair crew dispatched. Bituminous patching in progress"*) directly visible on the citizen's report and public feed.
+  - **Field Crew Dispatcher**: Designate crew units, target ETAs, and field supervisor contacts.
+  - **Official Resolution Closure**: Mark issues resolved with resolution proof photo attachment.
+  - **Export Municipal Work Order**: Format and print/export structured official Municipal Dispatch Memos.
+- **City-Wide Emergency Civic Advisories**:
+  - Issue high-priority emergency broadcast banners that appear live across all citizen dashboards.
 
 ---
 

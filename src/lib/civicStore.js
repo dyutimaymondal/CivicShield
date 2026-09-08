@@ -27,6 +27,7 @@ const STORAGE_KEY_PROTESTS = "civicshield_protests_v2";
 const STORAGE_KEY_SUPPORTS = "civicshield_supports_v2";
 const STORAGE_KEY_AUDIT = "civicshield_audit_v2";
 const STORAGE_KEY_REPORTS = "civicshield_reports_cache_v2";
+const STORAGE_KEY_BROADCASTS = "civicshield_broadcasts_v2";
 
 // Realistic Seed Dataset for Demo Scenario (PRD Section 41)
 const SEED_INCIDENTS = [
@@ -197,6 +198,121 @@ const SEED_PROTESTS = [
   }
 ];
 
+const SEED_REPORTS = [
+  {
+    id: "rep_seed_road_1",
+    incident_id: "inc_seed_road_hazard",
+    user_id: "citizen_vikram_p",
+    citizen_name: "Vikram Patel",
+    citizen_email: "vikram.patel@gmail.com",
+    title: "Massive Deep Crater Potholes along Sector 4 Metro Pillar 42",
+    description: "Deep multi-layer road crater cluster along the primary transit corridor causing vehicle undercarriage damage and severe two-wheeler swerving during morning peak hours.",
+    category: "Roads & Transportation",
+    location: "Sector 4 Arterial Highway, Near Metro Pillar 42",
+    photo_url: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80",
+    status: "in_progress",
+    severity: "High",
+    priority: "P1 - Urgent Municipal Attention",
+    priority_score: 0.82,
+    government_verified: true,
+    verified_by: "Er. Rajesh Sharma (Chief Municipal Engineer, PWD)",
+    verified_at: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+    verification_notes: "Field inspected by PWD Sub-Division 4. Structural road-base deformation confirmed.",
+    official_announcement: "PWD Rapid Response Crew #4 deployed on-site. Bituminous cold-mix patch work in progress. Traffic rerouting cones placed.",
+    department: "Public Works Department (PWD)",
+    crew_assigned: "PWD Rapid Response Crew #4",
+    eta: "Today by 5:30 PM",
+    created_at: new Date(Date.now() - 36 * 3600 * 1000).toISOString()
+  },
+  {
+    id: "rep_seed_sewage_1",
+    incident_id: "inc_seed_sewage_flood",
+    user_id: "citizen_ananya_s",
+    citizen_name: "Ananya Sen",
+    citizen_email: "ananya.sen@outlook.com",
+    title: "Hazardous Industrial Sewage Overflow at Ward 12 Market",
+    description: "Ruptured underground conduit spilling foul toxic effluent onto pedestrian sidewalks directly outside market stalls. Urgent biohazard intervention required.",
+    category: "Water Supply & Drainage",
+    location: "4th Cross Road, Ward 12 Market Transit Corridor",
+    photo_url: "https://images.unsplash.com/photo-1574958269340-fa927304f2dd?auto=format&fit=crop&w=800&q=80",
+    status: "pending",
+    severity: "Critical",
+    priority: "P0 - Emergency Dispatch",
+    priority_score: 0.885,
+    government_verified: false,
+    verified_by: null,
+    verified_at: null,
+    verification_notes: null,
+    official_announcement: null,
+    department: "Water Supply & Sewerage Board",
+    crew_assigned: null,
+    eta: "Pending Municipal Inspection",
+    created_at: new Date(Date.now() - 20 * 3600 * 1000).toISOString()
+  },
+  {
+    id: "rep_seed_wire_1",
+    incident_id: "inc_seed_power_hazard",
+    user_id: "citizen_manish_k",
+    citizen_name: "Manish Kumar",
+    citizen_email: "manish.k@gmail.com",
+    title: "Sparking Overhead 11kV Wire Snapped near School Boundary",
+    description: "High tension distribution wire hanging within 2 meters of the school walking gate sparking intermittently during drizzle. Immediate electrocution risk.",
+    category: "Power & Electrical Grid",
+    location: "School Lane, Opposite Primary Academy Gate",
+    photo_url: "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?auto=format&fit=crop&w=800&q=80",
+    status: "pending",
+    severity: "Critical",
+    priority: "P0 - Emergency Dispatch",
+    priority_score: 0.79,
+    government_verified: true,
+    verified_by: "Er. Rajesh Sharma (PWD / Grid Safety Liaison)",
+    verified_at: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+    verification_notes: "Priority dispatch submitted directly to State Power Grid substation.",
+    official_announcement: "Emergency electrical patrol dispatched to isolate feeder and re-anchor aerial bundle cable.",
+    department: "Electricity & Grid Safety Board",
+    crew_assigned: "State Power Grid Safety Patrol #2",
+    eta: "Within 45 minutes",
+    created_at: new Date(Date.now() - 8 * 3600 * 1000).toISOString()
+  },
+  {
+    id: "rep_seed_waste_1",
+    user_id: "citizen_priya_s",
+    citizen_name: "Priya Sharma",
+    citizen_email: "priya.sharma@gmail.com",
+    title: "Commercial Solid Waste Dump Accumulating at Health Center Gate",
+    description: "Massive pile of decomposing commercial waste and plastic refuse blocking access to public dispensary. Stray animals and health hazard.",
+    category: "Solid Waste & Sanitation",
+    location: "Ward 9 Dispensary Road, Junction 3",
+    photo_url: "https://images.unsplash.com/photo-1605600659908-0ef719419d41?auto=format&fit=crop&w=800&q=80",
+    status: "pending",
+    severity: "Medium",
+    priority: "P2 - Standard Priority",
+    priority_score: 0.52,
+    government_verified: false,
+    verified_by: null,
+    verified_at: null,
+    verification_notes: null,
+    official_announcement: null,
+    department: "Solid Waste Management & Sanitation",
+    crew_assigned: null,
+    eta: null,
+    created_at: new Date(Date.now() - 14 * 3600 * 1000).toISOString()
+  }
+];
+
+const SEED_BROADCASTS = [
+  {
+    id: "bc_seed_pwd_1",
+    title: "Municipal Public Notice: Emergency Road & Drainage Works on Sector 4 Corridor",
+    message: "Public Works Department crews are undertaking urgent bituminous road repairs and storm drain clearance on Sector 4 arterial road. Single lane closure in effect until 6:00 PM today. Traffic rerouting via Outer Ring Road.",
+    department: "Public Works Department (PWD)",
+    officer: "Er. Rajesh Sharma (Chief Municipal Engineer)",
+    severity: "WARNING", // INFO | WARNING | EMERGENCY
+    active: true,
+    created_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString()
+  }
+];
+
 class CivicStore {
   constructor() {
     this.listeners = new Set();
@@ -217,7 +333,10 @@ class CivicStore {
       localStorage.setItem(STORAGE_KEY_AUDIT, JSON.stringify([]));
     }
     if (!localStorage.getItem(STORAGE_KEY_REPORTS)) {
-      localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(SEED_REPORTS));
+    }
+    if (!localStorage.getItem(STORAGE_KEY_BROADCASTS)) {
+      localStorage.setItem(STORAGE_KEY_BROADCASTS, JSON.stringify(SEED_BROADCASTS));
     }
   }
 
@@ -238,6 +357,132 @@ class CivicStore {
   }
 
   // --------------------------------------------------------------------------
+  // REPORTS API (CITIZEN POSTS & GOVERNMENT VERIFICATION)
+  // --------------------------------------------------------------------------
+  getAllReports() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY_REPORTS);
+      if (!data) {
+        localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(SEED_REPORTS));
+        return SEED_REPORTS;
+      }
+      const parsed = JSON.parse(data);
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(SEED_REPORTS));
+        return SEED_REPORTS;
+      }
+      return parsed;
+    } catch {
+      return SEED_REPORTS;
+    }
+  }
+
+  saveReports(reports) {
+    localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(reports));
+    this.notify();
+  }
+
+  getUserReports(userId) {
+    if (!userId) return [];
+    const reports = this.getAllReports();
+    return reports.filter((r) => r.user_id === userId);
+  }
+
+  async updateReport(reportId, updates = {}) {
+    const reports = this.getAllReports();
+    const index = reports.findIndex((r) => r.id === reportId);
+    if (index === -1) return null;
+
+    reports[index] = {
+      ...reports[index],
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+
+    this.saveReports(reports);
+    this.recordAuditEvent("REPORT", reportId, "GOVERNMENT_UPDATE", updates);
+
+    // If linked to an incident, automatically sync official status and response
+    if (reports[index].incident_id) {
+      const incStatus = updates.status === "in_progress" 
+        ? "IN_PROGRESS" 
+        : updates.status === "resolved" 
+        ? "RESOLVED" 
+        : updates.status === "verified" 
+        ? "VERIFIED" 
+        : undefined;
+
+      this.updateIncidentStatus(
+        reports[index].incident_id,
+        incStatus,
+        updates.official_announcement || "",
+        updates.department || ""
+      );
+    }
+
+    // Parallel sync to Supabase reports table if available
+    try {
+      const supabaseUpdates = {};
+      if (updates.status) supabaseUpdates.status = updates.status;
+      if (updates.severity) supabaseUpdates.severity = updates.severity;
+      if (updates.official_announcement) supabaseUpdates.ai_summary = updates.official_announcement;
+      if (Object.keys(supabaseUpdates).length > 0) {
+        await supabase.from("reports").update(supabaseUpdates).eq("id", reportId);
+      }
+    } catch {
+      // background sync catch
+    }
+
+    return reports[index];
+  }
+
+  // --------------------------------------------------------------------------
+  // BROADCAST ANNOUNCEMENTS API
+  // --------------------------------------------------------------------------
+  getBroadcastAnnouncements() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY_BROADCASTS);
+      if (!data) {
+        localStorage.setItem(STORAGE_KEY_BROADCASTS, JSON.stringify(SEED_BROADCASTS));
+        return SEED_BROADCASTS;
+      }
+      return JSON.parse(data);
+    } catch {
+      return SEED_BROADCASTS;
+    }
+  }
+
+  getActiveBroadcastAnnouncements() {
+    return this.getBroadcastAnnouncements().filter((b) => b.active !== false);
+  }
+
+  publishBroadcastAnnouncement({ title, message, department, officer, severity = "WARNING" }) {
+    const list = this.getBroadcastAnnouncements();
+    const newBroadcast = {
+      id: `bc_${Date.now()}`,
+      title,
+      message,
+      department: department || "National Civic Operations Command",
+      officer: officer || "Municipal Authority",
+      severity, // "INFO" | "WARNING" | "EMERGENCY"
+      active: true,
+      created_at: new Date().toISOString()
+    };
+    list.unshift(newBroadcast);
+    localStorage.setItem(STORAGE_KEY_BROADCASTS, JSON.stringify(list));
+    this.recordAuditEvent("BROADCAST", newBroadcast.id, "PUBLISHED", newBroadcast);
+    this.notify();
+    return newBroadcast;
+  }
+
+  dismissBroadcastAnnouncement(id) {
+    const list = this.getBroadcastAnnouncements();
+    const updated = list.map((b) => (b.id === id ? { ...b, active: false } : b));
+    localStorage.setItem(STORAGE_KEY_BROADCASTS, JSON.stringify(updated));
+    this.notify();
+  }
+
+  // --------------------------------------------------------------------------
   // INCIDENTS API
   // --------------------------------------------------------------------------
   getIncidents() {
@@ -246,17 +491,6 @@ class CivicStore {
       return data ? JSON.parse(data) : SEED_INCIDENTS;
     } catch {
       return SEED_INCIDENTS;
-    }
-  }
-
-  getUserReports(userId) {
-    if (!userId) return [];
-    try {
-      const data = localStorage.getItem(STORAGE_KEY_REPORTS);
-      const reports = data ? JSON.parse(data) : [];
-      return reports.filter((r) => r.user_id === userId);
-    } catch {
-      return [];
     }
   }
 
@@ -270,24 +504,34 @@ class CivicStore {
     this.notify();
   }
 
-  updateIncidentStatus(incidentId, newStatus, officialResponse = "", department = "") {
+  updateIncidentStatus(incidentId, newStatus, officialResponse = "", department = "", priorityScore = null, priorityBadge = null) {
     const incidents = this.getIncidents();
     const index = incidents.findIndex((i) => i.id === incidentId);
     if (index === -1) return null;
 
-    incidents[index].status = newStatus;
+    if (newStatus) {
+      incidents[index].status = newStatus;
+    }
     if (officialResponse) {
       incidents[index].official_response = officialResponse;
     }
     if (department) {
       incidents[index].department = department;
     }
+    if (priorityScore !== null && priorityScore !== undefined) {
+      incidents[index].priority_score = priorityScore;
+    }
+    if (priorityBadge) {
+      incidents[index].priority = priorityBadge;
+    }
     incidents[index].updated_at = new Date().toISOString();
 
     this.saveIncidents(incidents);
     this.recordAuditEvent("INCIDENT", incidentId, "STATUS_UPDATED", {
       newStatus,
-      officialResponse
+      officialResponse,
+      department,
+      priorityScore
     });
 
     return incidents[index];

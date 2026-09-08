@@ -73,7 +73,10 @@ function App() {
           <div className="nav-links">
             <a href="#home" className="nav-link">Home</a>
             <Link to="/incidents" className="nav-link">Public Incidents</Link>
-            <Link to="/authority" className="nav-link" style={{ color: "var(--accent-amber)" }}>Authority Command</Link>
+            <Link to="/government" className="nav-link" style={{ color: "#fbbf24", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
+              <Building2 size={15} />
+              <span>Gov Portal 🏛️</span>
+            </Link>
             <a href="#workflow" className="nav-link">Workflow</a>
 
             {currentUser ? (
@@ -473,7 +476,7 @@ function App() {
               <h4>Portals</h4>
               <Link to="/incidents">Public Incidents & Demands</Link>
               <Link to="/dashboard">Citizen Command Portal</Link>
-              <Link to="/authority">Authority Dispatch Console</Link>
+              <Link to="/government" style={{ color: "#fbbf24", fontWeight: 700 }}>Government Operations Command 🏛️</Link>
               <Link to="/login">Citizen Login</Link>
               <Link to="/register">Create Account</Link>
             </div>
