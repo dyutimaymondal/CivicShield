@@ -3,6 +3,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import { getMapTilerTileUrl, MAPTILER_ATTRIBUTION } from "../lib/mapTiler";
+import { useTheme } from "../lib/themeContext";
 
 // Fix Leaflet marker icon asset paths
 delete L.Icon.Default.prototype._getIconUrl;
@@ -13,9 +14,26 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function CivicMap({ incidents = [], onSelectIncident, selectedIncidentId }) {
+  const { theme } = useTheme();
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const tileLayerRef = useRef(null);
   const markersRef = useRef([]);
+
+  // Tile layer style synchronization with theme
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    if (tileLayerRef.current) {
+      mapInstanceRef.current.removeLayer(tileLayerRef.current);
+    }
+    const style = theme === "light" ? "streets-v2" : "streets-v2-dark";
+    const layer = L.tileLayer(getMapTilerTileUrl(style), {
+      maxZoom: 19,
+      tileSize: 256,
+      attribution: MAPTILER_ATTRIBUTION,
+    }).addTo(mapInstanceRef.current);
+    tileLayerRef.current = layer;
+  }, [theme]);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -32,12 +50,14 @@ export default function CivicMap({ incidents = [], onSelectIncident, selectedInc
           attributionControl: true
         });
 
-        // MapTiler Cloud Dark Tile Layer
-        L.tileLayer(getMapTilerTileUrl("streets-v2-dark"), {
+        // MapTiler Cloud Tile Layer matching theme
+        const style = theme === "light" ? "streets-v2" : "streets-v2-dark";
+        const layer = L.tileLayer(getMapTilerTileUrl(style), {
           maxZoom: 19,
           tileSize: 256,
           attribution: MAPTILER_ATTRIBUTION,
         }).addTo(map);
+        tileLayerRef.current = layer;
 
         mapInstanceRef.current = map;
       } catch (err) {
@@ -121,7 +141,7 @@ export default function CivicMap({ incidents = [], onSelectIncident, selectedInc
         // ignore bounds errors on fast unmount
       }
     }
-  }, [incidents, selectedIncidentId, onSelectIncident]);
+  }, [incidents, selectedIncidentId, onSelectIncident, theme]);
 
   return (
     <div className="civic-map-wrapper">

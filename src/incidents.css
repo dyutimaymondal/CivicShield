@@ -1471,3 +1471,256 @@
   font-weight: 700;
   font-size: 12px;
 }
+
+/* ==========================================================================
+   Light Theme Overrides for Public Incidents Explorer (incidents.css)
+   ========================================================================== */
+[data-theme="light"] .incidents-page,
+.theme-light .incidents-page {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .incidents-nav,
+.theme-light .incidents-nav {
+  background: var(--bg-navbar);
+  border-bottom: 1px solid var(--border-glass);
+}
+
+[data-theme="light"] .nav-link-btn,
+.theme-light .nav-link-btn {
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #475569;
+}
+
+[data-theme="light"] .nav-link-btn:hover,
+.theme-light .nav-link-btn:hover {
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+}
+
+[data-theme="light"] .incident-card,
+.theme-light .incident-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .incident-card:hover,
+.theme-light .incident-card:hover {
+  background: #ffffff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .incident-card-title,
+.theme-light .incident-card-title {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .incident-card-desc,
+.theme-light .incident-card-desc {
+  color: #334155;
+}
+
+[data-theme="light"] .filter-chip,
+.theme-light .filter-chip {
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #475569;
+}
+
+[data-theme="light"] .filter-chip.active,
+.theme-light .filter-chip.active {
+  background: #ffffff;
+  color: #0891b2;
+  border-color: #0891b2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .search-input,
+.theme-light .search-input {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .sort-select,
+.theme-light .sort-select {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .mp-campaign-card,
+.theme-light .mp-campaign-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .modal-overlay,
+.theme-light .modal-overlay {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+[data-theme="light"] .modal-container,
+.theme-light .modal-container {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+  color: #0f172a;
+}
+
+[data-theme="light"] .modal-backdrop,
+.theme-light .modal-backdrop {
+  background: rgba(15, 23, 42, 0.65);
+}
+
+[data-theme="light"] .incident-detail-modal,
+.theme-light .incident-detail-modal {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+  color: #0f172a;
+}
+
+[data-theme="light"] .modal-header-strip,
+.theme-light .modal-header-strip {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .modal-close-btn,
+.theme-light .modal-close-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+[data-theme="light"] .modal-close-btn:hover,
+.theme-light .modal-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+[data-theme="light"] .incident-title-block h2,
+.theme-light .incident-title-block h2 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .incident-full-desc,
+.theme-light .incident-full-desc {
+  color: #334155;
+}
+
+[data-theme="light"] .ai-brief-banner,
+.theme-light .ai-brief-banner {
+  background: #ecfeff;
+  border: 1px solid rgba(6, 182, 212, 0.35);
+}
+
+[data-theme="light"] .ai-brief-banner p,
+.theme-light .ai-brief-banner p {
+  color: #155e75;
+}
+
+[data-theme="light"] .priority-score-card,
+.theme-light .priority-score-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .breakdown-item strong,
+.theme-light .breakdown-item strong {
+  color: #0f172a;
+}
+
+[data-theme="light"] .micro-protest-enclave,
+.theme-light .micro-protest-enclave {
+  background: linear-gradient(135deg, #f0fdfa 0%, #f5f3ff 100%);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  box-shadow: 0 8px 30px rgba(6, 182, 212, 0.08);
+}
+
+[data-theme="light"] .demand-statement-box,
+.theme-light .demand-statement-box {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+}
+
+[data-theme="light"] .demand-statement-box p,
+.theme-light .demand-statement-box p {
+  color: #0f172a;
+}
+
+[data-theme="light"] .official-response-box,
+.theme-light .official-response-box {
+  background: #ecfdf5;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+[data-theme="light"] .official-response-box p,
+.theme-light .official-response-box p {
+  color: #065f46;
+}
+
+[data-theme="light"] .incident-card-preview,
+.theme-light .incident-card-preview {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .incident-card-preview:hover,
+.theme-light .incident-card-preview:hover {
+  background: #f8fafc;
+  border-color: #0891b2;
+}
+
+[data-theme="light"] .incident-card-preview h4,
+.theme-light .incident-card-preview h4 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .card-desc-snippet,
+.theme-light .card-desc-snippet {
+  color: #475569;
+}
+
+[data-theme="light"] .verify-modal-content,
+.theme-light .verify-modal-content {
+  background: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+  color: #0f172a;
+}
+
+[data-theme="light"] .verify-intro h2,
+.theme-light .verify-intro h2 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .verify-intro p,
+.theme-light .verify-intro p {
+  color: #475569;
+}
+
+[data-theme="light"] .verify-field-group label,
+.theme-light .verify-field-group label {
+  color: #334155;
+}
+
+[data-theme="light"] .verify-field-group input,
+.theme-light .verify-field-group input {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .field-helper,
+.theme-light .field-helper {
+  color: #64748b;
+}
+
+

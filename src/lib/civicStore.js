@@ -828,10 +828,14 @@ const SEED_BROADCASTS = [
 class CivicStore {
   constructor() {
     this.listeners = new Set();
+    this.broadcastChannel = null;
+    this.supabaseChannel = null;
     this.initStore();
+    this.initRealtimeSync();
   }
 
   initStore() {
+    if (typeof localStorage === "undefined") return;
     if (!localStorage.getItem(STORAGE_KEY_INCIDENTS)) {
       localStorage.setItem(STORAGE_KEY_INCIDENTS, JSON.stringify(SEED_INCIDENTS));
     }
@@ -849,6 +853,311 @@ class CivicStore {
     }
     if (!localStorage.getItem(STORAGE_KEY_BROADCASTS)) {
       localStorage.setItem(STORAGE_KEY_BROADCASTS, JSON.stringify(SEED_BROADCASTS));
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // REAL-TIME SYNCHRONIZATION ENGINE (Cross-Tab, Supabase, Storage)
+  // --------------------------------------------------------------------------
+  initRealtimeSync() {
+    if (typeof window === "undefined") return;
+
+    // 1. Cross-Tab Synchronization via HTML5 BroadcastChannel (zero latency)
+    try {
+      if ("BroadcastChannel" in window) {
+        this.broadcastChannel = new BroadcastChannel("civicshield_sync_bus");
+        this.broadcastChannel.onmessage = (event) => {
+          const { type, payload } = event.data || {};
+          if (type === "REPORT_CREATED" && payload) {
+            this._handleIncomingReport(payload, false);
+          } else if (type === "REPORT_UPDATED" && payload) {
+            this._handleIncomingReportUpdate(payload, false);
+          } else if (type === "INCIDENT_UPDATED" && payload) {
+            this._handleIncomingIncidentUpdate(payload, false);
+          } else if (type === "BROADCAST_CREATED" && payload) {
+            this._handleIncomingBroadcast(payload, false);
+          }
+        };
+      }
+    } catch (e) {
+      console.warn("BroadcastChannel initialization notice:", e);
+    }
+
+    // 2. Cross-Tab Storage Event Listener (Fallback across all browser tabs)
+    try {
+      window.addEventListener("storage", (e) => {
+        if (
+          e.key === STORAGE_KEY_REPORTS ||
+          e.key === STORAGE_KEY_INCIDENTS ||
+          e.key === STORAGE_KEY_BROADCASTS
+        ) {
+          this.notify();
+        }
+      });
+    } catch {
+      // ignore
+    }
+
+    // 3. Supabase Realtime Subscription (Cross-device and remote database events)
+    try {
+      this.supabaseChannel = supabase
+        .channel("civicshield_realtime_sync")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "reports" }, (payload) => {
+          if (payload.new) {
+            this._handleIncomingSupabaseReport(payload.new);
+          }
+        })
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "reports" }, (payload) => {
+          if (payload.new) {
+            this._handleIncomingSupabaseReport(payload.new);
+          }
+        })
+        .on("broadcast", { event: "report_created" }, (event) => {
+          if (event.payload) {
+            this._handleIncomingReport(event.payload, false);
+          }
+        })
+        .on("broadcast", { event: "report_updated" }, (event) => {
+          if (event.payload) {
+            this._handleIncomingReportUpdate(event.payload, false);
+          }
+        })
+        .on("broadcast", { event: "incident_updated" }, (event) => {
+          if (event.payload) {
+            this._handleIncomingIncidentUpdate(event.payload, false);
+          }
+        })
+        .on("broadcast", { event: "broadcast_created" }, (event) => {
+          if (event.payload) {
+            this._handleIncomingBroadcast(event.payload, false);
+          }
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn("Supabase Realtime subscription notice:", err);
+    }
+
+    // Initial remote fetch
+    setTimeout(() => {
+      this.syncFromSupabase().catch(() => {});
+    }, 500);
+  }
+
+  broadcastEvent(type, payload) {
+    if (typeof window === "undefined") return;
+
+    // 1. BroadcastChannel (All tabs in same browser)
+    try {
+      if (this.broadcastChannel) {
+        this.broadcastChannel.postMessage({ type, payload });
+      }
+    } catch {
+      // ignore
+    }
+
+    // 2. Supabase Realtime Broadcast (All clients/browsers)
+    try {
+      if (this.supabaseChannel) {
+        const eventName = type.toLowerCase();
+        this.supabaseChannel.send({
+          type: "broadcast",
+          event: eventName,
+          payload
+        }).catch(() => {});
+      }
+    } catch {
+      // ignore
+    }
+
+    // 3. Local DOM custom event for immediate in-tab notification
+    try {
+      window.dispatchEvent(
+        new CustomEvent("civicshield_realtime_event", { detail: { type, payload } })
+      );
+    } catch {
+      // ignore
+    }
+  }
+
+  _handleIncomingReport(report, shouldBroadcast = true) {
+    if (!report || !report.id) return;
+
+    const rawLng = report.longitude !== undefined && report.longitude !== null ? report.longitude : report.longtitude;
+    const normalized = {
+      ...report,
+      longitude: typeof rawLng === "number" ? rawLng : parseFloat(rawLng),
+      latitude: typeof report.latitude === "number" ? report.latitude : parseFloat(report.latitude)
+    };
+
+    const reports = this.getAllReports();
+    const existingIndex = reports.findIndex((r) => String(r.id) === String(normalized.id));
+
+    if (existingIndex >= 0) {
+      reports[existingIndex] = { ...reports[existingIndex], ...normalized };
+    } else {
+      reports.unshift(normalized);
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(reports));
+    } catch {
+      // ignore
+    }
+
+    // Dispatch a new report alert custom event so UI displays a live toast/notice
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("civicshield_new_report_alert", { detail: { report: normalized } })
+      );
+      window.dispatchEvent(
+        new CustomEvent("civicshield_reports_updated", { detail: { report: normalized } })
+      );
+    }
+
+    if (shouldBroadcast) {
+      this.broadcastEvent("REPORT_CREATED", normalized);
+    }
+
+    this.notify();
+  }
+
+  _handleIncomingSupabaseReport(dbRecord) {
+    if (!dbRecord) return;
+    const rawLng = dbRecord.longtitude !== undefined && dbRecord.longtitude !== null ? dbRecord.longtitude : dbRecord.longitude;
+    const normalized = {
+      ...dbRecord,
+      longitude: typeof rawLng === "number" ? rawLng : parseFloat(rawLng),
+      latitude: typeof dbRecord.latitude === "number" ? dbRecord.latitude : parseFloat(dbRecord.latitude),
+      government_verified: dbRecord.status === "verified" || dbRecord.status === "in_progress" || dbRecord.status === "resolved",
+      verified_by: dbRecord.authority_note || "Municipal Authority"
+    };
+
+    this._handleIncomingReport(normalized, false);
+  }
+
+  _handleIncomingReportUpdate({ reportId, updates }, shouldBroadcast = true) {
+    if (!reportId || !updates) return;
+
+    const reports = this.getAllReports();
+    const index = reports.findIndex((r) => String(r.id) === String(reportId));
+    if (index === -1) return;
+
+    reports[index] = {
+      ...reports[index],
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(reports));
+    } catch {
+      // ignore
+    }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("civicshield_reports_updated", { detail: { report: reports[index] } })
+      );
+    }
+
+    if (shouldBroadcast) {
+      this.broadcastEvent("REPORT_UPDATED", { reportId, updates });
+    }
+
+    this.notify();
+  }
+
+  _handleIncomingIncidentUpdate({ incidentId, updates }, shouldBroadcast = true) {
+    if (!incidentId || !updates) return;
+
+    const incidents = this.getIncidents();
+    const index = incidents.findIndex((i) => String(i.id) === String(incidentId));
+    if (index === -1) return;
+
+    incidents[index] = {
+      ...incidents[index],
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      localStorage.setItem(STORAGE_KEY_INCIDENTS, JSON.stringify(incidents));
+    } catch {
+      // ignore
+    }
+
+    if (shouldBroadcast) {
+      this.broadcastEvent("INCIDENT_UPDATED", { incidentId, updates });
+    }
+
+    this.notify();
+  }
+
+  _handleIncomingBroadcast(newBroadcast, shouldBroadcast = true) {
+    if (!newBroadcast || !newBroadcast.id) return;
+
+    const list = this.getBroadcastAnnouncements();
+    if (!list.some((b) => b.id === newBroadcast.id)) {
+      list.unshift(newBroadcast);
+      try {
+        localStorage.setItem(STORAGE_KEY_BROADCASTS, JSON.stringify(list));
+      } catch {
+        // ignore
+      }
+      if (shouldBroadcast) {
+        this.broadcastEvent("BROADCAST_CREATED", newBroadcast);
+      }
+      this.notify();
+    }
+  }
+
+  async syncFromSupabase() {
+    try {
+      const { data, error } = await supabase
+        .from("reports")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.warn("Supabase reports query notice:", error.message);
+        return;
+      }
+
+      if (Array.isArray(data) && data.length > 0) {
+        const localReports = this.getAllReports();
+        let changed = false;
+
+        for (const remote of data) {
+          const rawLng = remote.longtitude !== undefined && remote.longtitude !== null ? remote.longtitude : remote.longitude;
+          const normalized = {
+            ...remote,
+            longitude: typeof rawLng === "number" ? rawLng : parseFloat(rawLng),
+            latitude: typeof remote.latitude === "number" ? remote.latitude : parseFloat(remote.latitude),
+            government_verified: remote.status === "verified" || remote.status === "in_progress" || remote.status === "resolved",
+            verified_by: remote.authority_note || "Municipal Authority"
+          };
+
+          const existingIdx = localReports.findIndex(
+            (r) => String(r.id) === String(remote.id) || (r.title === remote.title && r.location === remote.location)
+          );
+
+          if (existingIdx >= 0) {
+            if (localReports[existingIdx].status !== normalized.status || !localReports[existingIdx].government_verified && normalized.government_verified) {
+              localReports[existingIdx] = { ...localReports[existingIdx], ...normalized };
+              changed = true;
+            }
+          } else {
+            localReports.unshift(normalized);
+            changed = true;
+          }
+        }
+
+        if (changed) {
+          this.saveReports(localReports);
+        }
+      }
+    } catch (err) {
+      console.warn("syncFromSupabase error:", err);
     }
   }
 
@@ -902,7 +1211,7 @@ class CivicStore {
 
   async updateReport(reportId, updates = {}) {
     const reports = this.getAllReports();
-    const index = reports.findIndex((r) => r.id === reportId);
+    const index = reports.findIndex((r) => String(r.id) === String(reportId));
     if (index === -1) return null;
 
     reports[index] = {
@@ -913,6 +1222,9 @@ class CivicStore {
 
     this.saveReports(reports);
     this.recordAuditEvent("REPORT", reportId, "GOVERNMENT_UPDATE", updates);
+
+    // Broadcast update across tabs and to Supabase Realtime
+    this.broadcastEvent("REPORT_UPDATED", { reportId, updates });
 
     // If linked to an incident, automatically sync official status and response
     if (reports[index].incident_id) {
@@ -938,6 +1250,7 @@ class CivicStore {
       if (updates.status) supabaseUpdates.status = updates.status;
       if (updates.severity) supabaseUpdates.severity = updates.severity;
       if (updates.official_announcement) supabaseUpdates.ai_summary = updates.official_announcement;
+      if (updates.verified_by) supabaseUpdates.authority_note = updates.verified_by;
       if (Object.keys(supabaseUpdates).length > 0) {
         await supabase.from("reports").update(supabaseUpdates).eq("id", reportId);
       }
@@ -969,7 +1282,8 @@ class CivicStore {
     const validReports = [];
     const validateAndPush = (r) => {
       const lat = typeof r.latitude === "number" ? r.latitude : parseFloat(r.latitude);
-      const lng = typeof r.longitude === "number" ? r.longitude : parseFloat(r.longitude);
+      const rawLng = r.longitude !== undefined && r.longitude !== null ? r.longitude : r.longtitude;
+      const lng = typeof rawLng === "number" ? rawLng : parseFloat(rawLng);
 
       if (
         !isNaN(lat) &&
@@ -1036,6 +1350,7 @@ class CivicStore {
     list.unshift(newBroadcast);
     localStorage.setItem(STORAGE_KEY_BROADCASTS, JSON.stringify(list));
     this.recordAuditEvent("BROADCAST", newBroadcast.id, "PUBLISHED", newBroadcast);
+    this.broadcastEvent("BROADCAST_CREATED", newBroadcast);
     this.notify();
     return newBroadcast;
   }
@@ -1097,6 +1412,17 @@ class CivicStore {
       officialResponse,
       department,
       priorityScore
+    });
+
+    this.broadcastEvent("INCIDENT_UPDATED", {
+      incidentId,
+      updates: {
+        status: newStatus,
+        official_response: officialResponse,
+        department,
+        priority_score: priorityScore,
+        priority: priorityBadge
+      }
     });
 
     return incidents[index];
@@ -1350,28 +1676,53 @@ class CivicStore {
       // ignore
     }
 
-    // Attempt Supabase insert in parallel (if connected and authenticated)
-    if (user?.id) {
-      try {
-        await supabase.from("reports").insert([
-          {
-            title: newReportRecord.title,
-            description: newReportRecord.description,
-            category: newReportRecord.category,
-            location: newReportRecord.location,
-            photo_url: newReportRecord.photo_url,
-            status: "pending",
-            severity: newReportRecord.severity,
-            user_id: user.id,
-            latitude: newReportRecord.latitude,
-            longitude: newReportRecord.longitude
+    // Attempt Supabase insert with schema-aligned column names and UUID check
+    try {
+      const isUUID = typeof user?.id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+      let effectiveUserId = isUUID ? user.id : null;
+      if (!effectiveUserId) {
+        try {
+          const { data: sessData } = await supabase.auth.getSession();
+          if (sessData?.session?.user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessData.session.user.id)) {
+            effectiveUserId = sessData.session.user.id;
           }
-        ]);
-      } catch (err) {
-        console.warn("Supabase background insert note:", err.message);
+        } catch {
+          // ignore
+        }
       }
+
+      const supabaseInsertPayload = {
+        title: newReportRecord.title,
+        description: newReportRecord.description,
+        category: newReportRecord.category,
+        location: newReportRecord.location,
+        photo_url: newReportRecord.photo_url || null,
+        status: "pending",
+        severity: newReportRecord.severity || "Medium",
+        latitude: Number(newReportRecord.latitude),
+        longtitude: Number(newReportRecord.longitude),
+        ai_summary: newReportRecord.ai_summary || null
+      };
+      if (effectiveUserId) {
+        supabaseInsertPayload.user_id = effectiveUserId;
+      }
+
+      const { data: insData, error: insErr } = await supabase
+        .from("reports")
+        .insert([supabaseInsertPayload])
+        .select();
+
+      if (!insErr && insData && insData.length > 0) {
+        newReportRecord.supabase_id = insData[0].id;
+      } else if (insErr) {
+        console.warn("Supabase background insert note:", insErr.message);
+      }
+    } catch (err) {
+      console.warn("Supabase background insert exception:", err.message);
     }
 
+    // Broadcast new report across all browser tabs and to Supabase Realtime
+    this.broadcastEvent("REPORT_CREATED", newReportRecord);
     this.notify();
 
     return {

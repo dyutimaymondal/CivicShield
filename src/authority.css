@@ -472,3 +472,164 @@
   filter: brightness(1.1);
   transform: translateY(-1px);
 }
+
+/* ==========================================================================
+   Light Theme Overrides for Authority Dashboard (authority.css)
+   ========================================================================== */
+[data-theme="light"] .authority-page,
+.theme-light .authority-page {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .authority-nav,
+.theme-light .authority-nav {
+  background: var(--bg-navbar);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .authority-title-block h1,
+.theme-light .authority-title-block h1 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .authority-title-block p,
+.theme-light .authority-title-block p {
+  color: #64748b;
+}
+
+[data-theme="light"] .authority-kpis .kpi-card,
+.theme-light .authority-kpis .kpi-card {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .kpi-data h3,
+.theme-light .kpi-data h3 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .kpi-data p,
+.theme-light .kpi-data p {
+  color: #64748b;
+}
+
+[data-theme="light"] .queue-column,
+.theme-light .queue-column {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .queue-header,
+.theme-light .queue-header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .queue-header h3,
+.theme-light .queue-header h3 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .queue-filters-strip,
+.theme-light .queue-filters-strip {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .dept-select-wrap select,
+.theme-light .dept-select-wrap select {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .queue-item-card,
+.theme-light .queue-item-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .queue-item-card:hover,
+.theme-light .queue-item-card:hover {
+  background: #f1f5f9;
+  border-color: #f59e0b;
+}
+
+[data-theme="light"] .queue-item-card.selected,
+.theme-light .queue-item-card.selected {
+  background: #fffbeb;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.12);
+}
+
+[data-theme="light"] .queue-item-card h4,
+.theme-light .queue-item-card h4 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .authority-detail-panel,
+.theme-light .authority-detail-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .panel-title h2,
+.theme-light .panel-title h2 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .stat-box-mini,
+.theme-light .stat-box-mini {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .stat-box-mini strong,
+.theme-light .stat-box-mini strong {
+  color: #0f172a;
+}
+
+[data-theme="light"] .ai-authority-brief-enclave,
+.theme-light .ai-authority-brief-enclave {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.08);
+}
+
+[data-theme="light"] .brief-demand-section,
+.theme-light .brief-demand-section {
+  background: #ffffff;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+[data-theme="light"] .brief-demand-section p,
+.theme-light .brief-demand-section p {
+  color: #1e293b;
+}
+
+[data-theme="light"] .dispatch-action-controls,
+.theme-light .dispatch-action-controls {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .dispatch-action-controls h3,
+.theme-light .dispatch-action-controls h3 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .control-field select,
+[data-theme="light"] .control-field textarea,
+.theme-light .control-field select,
+.theme-light .control-field textarea {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+

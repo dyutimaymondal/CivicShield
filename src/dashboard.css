@@ -1136,3 +1136,106 @@
   border-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
+
+/* ==========================================================================
+   Light Theme Overrides for Citizen Dashboard (dashboard.css)
+   ========================================================================== */
+[data-theme="light"] .dashboard-page,
+.theme-light .dashboard-page {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .dashboard-nav,
+.theme-light .dashboard-nav {
+  background: var(--bg-navbar);
+  border-bottom: 1px solid var(--border-glass);
+}
+
+[data-theme="light"] .report-form-card,
+.theme-light .report-form-card {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(6, 182, 212, 0.28);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .form-input,
+[data-theme="light"] .form-textarea,
+[data-theme="light"] .form-select,
+.theme-light .form-input,
+.theme-light .form-textarea,
+.theme-light .form-select {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .form-input:focus,
+[data-theme="light"] .form-textarea:focus,
+.theme-light .form-input:focus,
+.theme-light .form-textarea:focus {
+  border-color: #0891b2;
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15);
+}
+
+[data-theme="light"] .report-card,
+.theme-light .report-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .report-card:hover,
+.theme-light .report-card:hover {
+  background: #ffffff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .filter-tab,
+.theme-light .filter-tab {
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #475569;
+}
+
+[data-theme="light"] .filter-tab.active,
+.theme-light .filter-tab.active {
+  background: #ffffff;
+  color: #0891b2;
+  border-color: #0891b2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .empty-reports,
+.theme-light .empty-reports {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px dashed rgba(15, 23, 42, 0.15);
+  color: #64748b;
+}
+
+[data-theme="light"] .aadhaar-verification-banner,
+.theme-light .aadhaar-verification-banner {
+  background: linear-gradient(135deg, rgba(8, 145, 178, 0.08) 0%, rgba(5, 150, 105, 0.06) 100%);
+  border: 1px solid rgba(8, 145, 178, 0.25);
+}
+
+[data-theme="light"] .ai-analysis-card,
+.theme-light .ai-analysis-card {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .onboarding-modal,
+.theme-light .onboarding-modal {
+  background: #ffffff;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .onboarding-skip-btn,
+.theme-light .onboarding-skip-btn {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #475569;
+}

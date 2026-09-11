@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./lib/supabaseClient";
 import { authStore } from "./lib/authStore";
+import ThemeToggle from "./components/ThemeToggle";
 import "./App.css";
 
 function App() {
@@ -73,11 +74,14 @@ function App() {
           <div className="nav-links">
             <a href="#home" className="nav-link">Home</a>
             <Link to="/incidents" className="nav-link">Public Incidents</Link>
-            <Link to="/government" className="nav-link" style={{ color: "#fbbf24", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
+            <Link to="/government" className="nav-link authority-btn" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <Building2 size={15} />
               <span>Gov Portal 🏛️</span>
             </Link>
             <a href="#workflow" className="nav-link">Workflow</a>
+
+            {/* Animated Theme Toggle */}
+            <ThemeToggle size="sm" />
 
             {currentUser ? (
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

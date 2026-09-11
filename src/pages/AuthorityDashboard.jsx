@@ -19,6 +19,7 @@ import {
 import { civicStore } from "../lib/civicStore";
 import { generateAuthorityBrief, generateAuthorityBriefAsync } from "../lib/aiIntelligence";
 import CivicProblemMap from "../components/CivicProblemMap";
+import ThemeToggle from "../components/ThemeToggle";
 import "../authority.css";
 
 export default function AuthorityDashboard() {
@@ -193,6 +194,7 @@ export default function AuthorityDashboard() {
             <ShieldAlert size={14} />
             <span>DISPATCH OFFICER ROLE ACTIVE</span>
           </div>
+          <ThemeToggle size="sm" />
         </div>
       </nav>
 

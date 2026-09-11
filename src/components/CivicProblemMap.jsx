@@ -19,6 +19,7 @@ import { createHeatLayer } from "../lib/leafletHeat";
 import { getMapTilerTileUrl, MAPTILER_ATTRIBUTION } from "../lib/mapTiler";
 import MapLegend from "./MapLegend";
 import MapIncidentDetailPanel from "./MapIncidentDetailPanel";
+import { useTheme } from "../lib/themeContext";
 import "./heatmap.css";
 
 // Fix Leaflet marker icon asset paths
@@ -95,7 +96,8 @@ export default function CivicProblemMap() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Map view mode states
-  const [tileMode, setTileMode] = useState("dark"); // "dark" | "dataviz" | "standard"
+  const { theme } = useTheme();
+  const tileMode = theme === "light" ? "standard" : "dark"; // auto-sync with theme
   const [showHotspotPins, setShowHotspotPins] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(true);
 

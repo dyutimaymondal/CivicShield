@@ -11,13 +11,15 @@ import Incidents from "./pages/Incidents.jsx";
 import GovernmentPortal from "./pages/GovernmentPortal.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import { ThemeProvider } from "./lib/themeContext.jsx";
 
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/incidents" element={<Incidents />} />
@@ -36,6 +38,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </BrowserRouter>
+      </ThemeProvider>
     </ErrorBoundary>
   </React.StrictMode>
 );

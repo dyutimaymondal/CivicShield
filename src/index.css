@@ -17,6 +17,10 @@
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
+  --text-main: #f8fafc;
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --bg-navbar: rgba(6, 10, 18, 0.85);
 
   --accent-cyan: #06b6d4;
   --accent-cyan-light: #22d3ee;
@@ -40,6 +44,45 @@
   --radius-full: 9999px;
 }
 
+[data-theme="light"],
+.theme-light {
+  color-scheme: light;
+
+  /* Light Theme Surfaces & Text */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-tertiary: #e2e8f0;
+  --bg-card: rgba(255, 255, 255, 0.94);
+  --bg-card-hover: #ffffff;
+  --bg-input: #ffffff;
+  --bg-navbar: rgba(255, 255, 255, 0.9);
+
+  --border-glass: rgba(15, 23, 42, 0.09);
+  --border-glass-subtle: rgba(15, 23, 42, 0.05);
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-glow: rgba(8, 145, 178, 0.35);
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-main: #0f172a;
+
+  --accent-cyan: #0891b2;
+  --accent-cyan-light: #0284c7;
+  --accent-cyan-glow: rgba(8, 145, 178, 0.15);
+  --accent-emerald: #059669;
+  --accent-emerald-glow: rgba(5, 150, 105, 0.15);
+  --accent-amber: #d97706;
+  --accent-amber-glow: rgba(217, 119, 6, 0.15);
+  --accent-rose: #e11d48;
+  --accent-rose-glow: rgba(225, 29, 72, 0.15);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 20px 35px -8px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 25px rgba(8, 145, 178, 0.15);
+}
+
 *,
 *::before,
 *::after {
@@ -56,6 +99,7 @@ html {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
@@ -65,6 +109,7 @@ body {
   color: var(--text-primary);
   font-family: var(--font-sans);
   line-height: 1.5;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
@@ -163,3 +208,168 @@ button, input, textarea, select {
     background-position: 200% 0;
   }
 }
+
+/* ==========================================================================
+   Shared Authority Button & Emergency Broadcast Banner
+   ========================================================================== */
+.authority-btn {
+  border-color: #f59e0b !important;
+  color: #fde68a !important;
+}
+
+[data-theme="light"] .authority-btn,
+.theme-light .authority-btn {
+  border-color: #d97706 !important;
+  color: #b45309 !important;
+  background: #fffbeb !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="light"] .authority-btn:hover,
+.theme-light .authority-btn:hover {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+/* Shared Emergency Advisory Banner */
+.emergency-broadcast-banner {
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s ease;
+}
+
+.emergency-broadcast-banner.emergency {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.22) 0%, rgba(185, 28, 28, 0.28) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.emergency-broadcast-banner.warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.22) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.emergency-broadcast-banner .broadcast-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.emergency-broadcast-banner.emergency .broadcast-icon-box {
+  color: #fca5a5;
+}
+
+.emergency-broadcast-banner.warning .broadcast-icon-box {
+  color: #fde68a;
+}
+
+.emergency-broadcast-banner .broadcast-tag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.emergency-broadcast-banner.emergency .broadcast-tag {
+  color: #fca5a5;
+}
+
+.emergency-broadcast-banner.warning .broadcast-tag {
+  color: #fde68a;
+}
+
+.emergency-broadcast-banner .broadcast-title {
+  margin: 2px 0 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.emergency-broadcast-banner .broadcast-message {
+  margin: 0;
+  font-size: 13px;
+  color: #e2e8f0;
+  line-height: 1.4;
+}
+
+.emergency-broadcast-banner .broadcast-badge {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+/* Light Theme Overrides for Emergency Banner */
+[data-theme="light"] .emergency-broadcast-banner.emergency,
+.theme-light .emergency-broadcast-banner.emergency {
+  background: #fef2f2 !important;
+  border: 1.5px solid #ef4444 !important;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.1) !important;
+}
+
+[data-theme="light"] .emergency-broadcast-banner.warning,
+.theme-light .emergency-broadcast-banner.warning {
+  background: #fffbeb !important;
+  border: 1.5px solid #f59e0b !important;
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.1) !important;
+}
+
+[data-theme="light"] .emergency-broadcast-banner.emergency .broadcast-icon-box,
+.theme-light .emergency-broadcast-banner.emergency .broadcast-icon-box {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+}
+
+[data-theme="light"] .emergency-broadcast-banner.warning .broadcast-icon-box,
+.theme-light .emergency-broadcast-banner.warning .broadcast-icon-box {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .emergency-broadcast-banner.emergency .broadcast-tag,
+.theme-light .emergency-broadcast-banner.emergency .broadcast-tag {
+  color: #b91c1c !important;
+}
+
+[data-theme="light"] .emergency-broadcast-banner.warning .broadcast-tag,
+.theme-light .emergency-broadcast-banner.warning .broadcast-tag {
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .emergency-broadcast-banner.emergency .broadcast-title,
+.theme-light .emergency-broadcast-banner.emergency .broadcast-title {
+  color: #991b1b !important;
+}
+
+[data-theme="light"] .emergency-broadcast-banner.warning .broadcast-title,
+.theme-light .emergency-broadcast-banner.warning .broadcast-title {
+  color: #92400e !important;
+}
+
+[data-theme="light"] .emergency-broadcast-banner.emergency .broadcast-message,
+.theme-light .emergency-broadcast-banner.emergency .broadcast-message {
+  color: #7f1d1d !important;
+  font-weight: 500 !important;
+}
+
+[data-theme="light"] .emergency-broadcast-banner.warning .broadcast-message,
+.theme-light .emergency-broadcast-banner.warning .broadcast-message {
+  color: #78350f !important;
+  font-weight: 500 !important;
+}
+
+[data-theme="light"] .emergency-broadcast-banner .broadcast-badge,
+.theme-light .emergency-broadcast-banner .broadcast-badge {
+  color: #64748b !important;
+  font-weight: 600 !important;
+}
+

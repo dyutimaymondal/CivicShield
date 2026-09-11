@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Shield, User, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
 import { authStore } from "../lib/authStore";
 import { rateLimiter, sanitizeInput, validateEmail, validatePassword } from "../lib/security";
+import ThemeToggle from "../components/ThemeToggle";
 import "../auth.css";
 
 function Register() {
@@ -89,6 +90,14 @@ function Register() {
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
         <div className="auth-card">
+          <div className="auth-top-bar">
+            <Link to="/" className="back-home-link" style={{ margin: 0 }}>
+              <ArrowLeft size={14} />
+              <span>Home</span>
+            </Link>
+            <ThemeToggle size="sm" />
+          </div>
+
           <div className="auth-card-glow" />
 
           <div className="auth-header">

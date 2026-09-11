@@ -34,6 +34,7 @@ import { rateLimiter, sanitizeInput, validateImageFile } from "../lib/security";
 import { civicStore } from "../lib/civicStore";
 import { verificationService } from "../lib/verificationService";
 import VerifyModal from "../components/VerifyModal";
+import ThemeToggle from "../components/ThemeToggle";
 import "../dashboard.css";
 
 function Dashboard() {
@@ -116,6 +117,21 @@ function Dashboard() {
     };
     window.addEventListener("civicshield_verification_updated", handleVerifyEvent);
 
+    // Initial background sync from Supabase
+    civicStore.syncFromSupabase().catch(() => {});
+
+    const handleReportsUpdate = () => {
+      if (isMounted) {
+        setActiveBroadcasts(civicStore.getActiveBroadcastAnnouncements());
+        const sess = authStore.getStoredSession();
+        if (sess?.user?.id) {
+          fetchReports(sess.user.id);
+        }
+      }
+    };
+
+    window.addEventListener("civicshield_reports_updated", handleReportsUpdate);
+
     const unsubscribeStore = civicStore.subscribe(() => {
       if (isMounted) {
         setActiveBroadcasts(civicStore.getActiveBroadcastAnnouncements());
@@ -131,6 +147,7 @@ function Dashboard() {
       subscription?.unsubscribe();
       unsubscribeStore();
       window.removeEventListener("civicshield_verification_updated", handleVerifyEvent);
+      window.removeEventListener("civicshield_reports_updated", handleReportsUpdate);
     };
   }, [navigate]);
 
@@ -156,7 +173,7 @@ function Dashboard() {
     );
   };
 
-  // Fetch user's reports isolated by userId
+  // Fetch user's reports isolated by userId with merged local and Supabase telemetry
   async function fetchReports(userId) {
     if (!userId) {
       setReports([]);
@@ -166,6 +183,10 @@ function Dashboard() {
     setLoadingReports(true);
 
     try {
+      const localUserReports = civicStore.getUserReports(userId);
+      const combinedMap = new Map();
+      localUserReports.forEach((r) => combinedMap.set(String(r.id), r));
+
       const { data, error } = await supabase
         .from("reports")
         .select("*")
@@ -173,11 +194,25 @@ function Dashboard() {
         .order("created_at", { ascending: false });
 
       if (!error && Array.isArray(data) && data.length > 0) {
-        setReports(data);
-      } else {
-        const localUserReports = civicStore.getUserReports(userId);
-        setReports(localUserReports);
+        data.forEach((r) => {
+          const rawLng = r.longtitude !== undefined && r.longtitude !== null ? r.longtitude : r.longitude;
+          const normalized = {
+            ...r,
+            longitude: typeof rawLng === "number" ? rawLng : parseFloat(rawLng),
+            latitude: typeof r.latitude === "number" ? r.latitude : parseFloat(r.latitude),
+            government_verified: r.status === "verified" || r.status === "in_progress" || r.status === "resolved",
+            verified_by: r.authority_note || "Municipal Authority"
+          };
+          const existing = combinedMap.get(String(r.id));
+          combinedMap.set(String(r.id), existing ? { ...existing, ...normalized } : normalized);
+        });
       }
+
+      setReports(
+        Array.from(combinedMap.values()).sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        )
+      );
     } catch {
       const localUserReports = civicStore.getUserReports(userId);
       setReports(localUserReports);
@@ -413,7 +448,7 @@ function Dashboard() {
             <span>Public Incidents</span>
           </Link>
 
-          <Link to="/government" className="nav-link-btn authority-btn" style={{ borderColor: "#f59e0b", color: "#fde68a" }}>
+          <Link to="/government" className="nav-link-btn authority-btn">
             <Building2 size={14} />
             <span>Gov Portal 🏛️</span>
           </Link>
@@ -433,6 +468,9 @@ function Dashboard() {
               <span>Verify Aadhaar ID</span>
             </button>
           )}
+
+          {/* Animated Theme Switch */}
+          <ThemeToggle size="sm" />
 
           <div className="user-profile-pill">
             <div className="user-avatar">
@@ -460,55 +498,24 @@ function Dashboard() {
 
         {/* ACTIVE GOVERNMENT EMERGENCY BROADCAST BANNER */}
         {activeBroadcasts.length > 0 && (
-          <div style={{
-            background: activeBroadcasts[0].severity === "EMERGENCY"
-              ? "linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(185, 28, 28, 0.25) 100%)"
-              : "linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.2) 100%)",
-            border: activeBroadcasts[0].severity === "EMERGENCY"
-              ? "1px solid rgba(239, 68, 68, 0.5)"
-              : "1px solid rgba(245, 158, 11, 0.45)",
-            borderRadius: "12px",
-            padding: "16px 20px",
-            marginBottom: "24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-            boxShadow: "0 6px 25px rgba(0, 0, 0, 0.4)"
-          }}>
+          <div className={`emergency-broadcast-banner ${activeBroadcasts[0].severity === "EMERGENCY" ? "emergency" : "warning"}`}>
             <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-              <div style={{
-                width: "42px",
-                height: "42px",
-                borderRadius: "10px",
-                background: "rgba(0, 0, 0, 0.25)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: activeBroadcasts[0].severity === "EMERGENCY" ? "#fca5a5" : "#fde68a",
-                flexShrink: 0
-              }}>
+              <div className="broadcast-icon-box">
                 <Megaphone size={22} />
               </div>
               <div>
-                <span style={{
-                  fontSize: "11px",
-                  fontWeight: 800,
-                  letterSpacing: "0.05em",
-                  color: activeBroadcasts[0].severity === "EMERGENCY" ? "#fca5a5" : "#fde68a",
-                  textTransform: "uppercase"
-                }}>
+                <span className="broadcast-tag">
                   🏛️ OFFICIAL GOVERNMENT CIVIC ADVISORY • {activeBroadcasts[0].department}
                 </span>
-                <h4 style={{ margin: "2px 0 4px", fontSize: "15px", fontWeight: 800, color: "#ffffff" }}>
+                <h4 className="broadcast-title">
                   {activeBroadcasts[0].title}
                 </h4>
-                <p style={{ margin: 0, fontSize: "13px", color: "#e2e8f0", lineHeight: 1.4 }}>
+                <p className="broadcast-message">
                   {activeBroadcasts[0].message}
                 </p>
               </div>
             </div>
-            <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+            <span className="broadcast-badge">
               Active Notice
             </span>
           </div>

@@ -312,3 +312,72 @@
 .back-home-link:hover {
   color: var(--text-primary);
 }
+
+/* ==========================================================================
+   Light Theme Overrides for Auth Suite (auth.css)
+   ========================================================================== */
+[data-theme="light"] .auth-page,
+.theme-light .auth-page {
+  background-color: var(--bg-primary);
+}
+
+[data-theme="light"] .auth-grid,
+.theme-light .auth-grid {
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+}
+
+[data-theme="light"] .auth-card,
+.theme-light .auth-card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  box-shadow: 
+    0 25px 60px -10px rgba(0, 0, 0, 0.08),
+    0 0 40px rgba(6, 182, 212, 0.1);
+}
+
+[data-theme="light"] .auth-header h1,
+.theme-light .auth-header h1 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .auth-header p,
+.theme-light .auth-header p {
+  color: #475569;
+}
+
+[data-theme="light"] .auth-field-group label,
+.theme-light .auth-field-group label {
+  color: #334155;
+}
+
+[data-theme="light"] .auth-field-input-wrap input,
+.theme-light .auth-field-input-wrap input {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .auth-field-input-wrap input:focus,
+.theme-light .auth-field-input-wrap input:focus {
+  border-color: #0891b2;
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15);
+}
+
+.auth-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+[data-theme="light"] .auth-top-bar,
+.theme-light .auth-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 20px;
+}

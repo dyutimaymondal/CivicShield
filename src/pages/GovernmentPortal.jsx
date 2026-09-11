@@ -28,7 +28,9 @@ import {
   Megaphone
 } from "lucide-react";
 import { civicStore } from "../lib/civicStore";
+import { supabase } from "../lib/supabaseClient";
 import CivicProblemMap from "../components/CivicProblemMap";
+import ThemeToggle from "../components/ThemeToggle";
 import "../government.css";
 
 const GOV_SESSION_KEY = "civicshield_gov_session_v1";
@@ -90,7 +92,12 @@ export default function GovernmentPortal() {
   const [newBroadcastDept, setNewBroadcastDept] = useState("Public Works Department (PWD)");
   const [newBroadcastSeverity, setNewBroadcastSeverity] = useState("WARNING");
 
-  // Subscribe to civicStore reactive changes
+  const showNotice = (msg) => {
+    setStatusMessage(msg);
+    setTimeout(() => setStatusMessage(""), 5000);
+  };
+
+  // Subscribe to civicStore reactive changes and listen for live incoming citizen reports
   useEffect(() => {
     function refreshData() {
       setReports(civicStore.getAllReports());
@@ -99,9 +106,42 @@ export default function GovernmentPortal() {
       setBroadcasts(civicStore.getBroadcastAnnouncements());
     }
 
+    // 1. Initial sync with remote Supabase database
+    civicStore.syncFromSupabase().then(refreshData).catch(() => {});
+
+    // 2. Subscribe to internal reactive changes
     const unsubscribe = civicStore.subscribe(refreshData);
-    return () => unsubscribe();
-  }, []);
+
+    // 3. Listen for live incoming citizen report alerts
+    const handleNewReportAlert = (e) => {
+      refreshData();
+      const rep = e.detail?.report;
+      if (rep) {
+        showNotice(`🚨 New Citizen Report: "${rep.title?.slice(0, 35) || "Issue"}" received from ${rep.location || "Community"}!`);
+      }
+    };
+
+    const handleReportsUpdated = () => {
+      refreshData();
+    };
+
+    window.addEventListener("civicshield_new_report_alert", handleNewReportAlert);
+    window.addEventListener("civicshield_reports_updated", handleReportsUpdated);
+
+    // 4. If officer session is active, authenticate with Supabase in background
+    if (govSession && seedGovEmail && seedGovPassword) {
+      supabase.auth.signInWithPassword({
+        email: seedGovEmail,
+        password: seedGovPassword
+      }).catch(() => {});
+    }
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener("civicshield_new_report_alert", handleNewReportAlert);
+      window.removeEventListener("civicshield_reports_updated", handleReportsUpdated);
+    };
+  }, [govSession, seedGovEmail, seedGovPassword]);
 
   // --------------------------------------------------------------------------
   // AUTHENTICATION HANDLERS
@@ -132,6 +172,13 @@ export default function GovernmentPortal() {
       };
       sessionStorage.setItem(GOV_SESSION_KEY, JSON.stringify(sessionData));
       setGovSession(sessionData);
+
+      // Authenticate with Supabase and sync reports
+      supabase.auth.signInWithPassword({
+        email: seedGovEmail,
+        password: seedGovPassword
+      }).catch(() => {});
+      civicStore.syncFromSupabase();
     } else {
       setLoginError("Invalid Government Official ID or Secret Security Key. Please verify official credentials.");
     }
@@ -296,11 +343,6 @@ export default function GovernmentPortal() {
     showNotice(`Advisory deactivated.`);
   };
 
-  const showNotice = (msg) => {
-    setStatusMessage(msg);
-    setTimeout(() => setStatusMessage(""), 5000);
-  };
-
   // --------------------------------------------------------------------------
   // METRICS COMPUTATION
   // --------------------------------------------------------------------------
@@ -351,7 +393,12 @@ export default function GovernmentPortal() {
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.4 }}
+            style={{ position: "relative" }}
           >
+            <div style={{ position: "absolute", top: "20px", right: "20px", zIndex: 10 }}>
+              <ThemeToggle size="sm" />
+            </div>
+
             <div className="gov-emblem-badge">
               <Building2 size={36} />
             </div>
@@ -488,6 +535,8 @@ export default function GovernmentPortal() {
               <span>Citizen Portal</span>
             </Link>
 
+            <ThemeToggle size="sm" />
+
             <button onClick={handleGovLogout} className="gov-logout-btn" title="Sign out of Government Command">
               <LogOut size={14} />
               <span>Exit Console</span>
@@ -498,6 +547,65 @@ export default function GovernmentPortal() {
 
       {/* MAIN OPERATIONS CONTAINER */}
       <main className="gov-main-container">
+        {/* LIVE TOAST NOTICE NOTIFICATION */}
+        <AnimatePresence>
+          {statusMessage && (
+            <motion.div
+              className="gov-toast-alert"
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              style={{
+                position: "fixed",
+                top: "76px",
+                right: "24px",
+                zIndex: 9999,
+                background: "rgba(15, 23, 42, 0.94)",
+                border: "1px solid rgba(6, 182, 212, 0.5)",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(6, 182, 212, 0.25)",
+                borderRadius: "10px",
+                padding: "12px 18px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                color: "#ffffff",
+                backdropFilter: "blur(12px)",
+                maxWidth: "480px"
+              }}
+            >
+              <div style={{
+                background: "rgba(6, 182, 212, 0.2)",
+                borderRadius: "50%",
+                width: "32px",
+                height: "32px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#06b6d4",
+                flexShrink: 0
+              }}>
+                <Sparkles size={16} />
+              </div>
+              <div style={{ fontSize: "13px", fontWeight: 600, flex: 1, lineHeight: "1.4", color: "#f1f5f9" }}>
+                {statusMessage}
+              </div>
+              <button
+                type="button"
+                onClick={() => setStatusMessage("")}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#94a3b8",
+                  cursor: "pointer",
+                  padding: "4px"
+                }}
+              >
+                <X size={16} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* ACTIVE LIVE EMERGENCY BROADCASTS BANNER */}
         {activeBroadcasts.length > 0 && (
           <div className="gov-live-broadcast-banner">
@@ -673,49 +781,23 @@ export default function GovernmentPortal() {
         {activeTab === "posts" && (
           <section>
             {/* Filter and Search Bar */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: "12px",
-              marginBottom: "20px",
-              background: "rgba(15, 23, 42, 0.6)",
-              padding: "14px 18px",
-              borderRadius: "12px",
-              border: "1px solid rgba(255, 255, 255, 0.08)"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: "260px" }}>
-                <Search size={16} style={{ color: "#94a3b8" }} />
+            <div className="gov-filter-controls-row">
+              <div className="gov-search-box">
+                <Search size={16} className="gov-search-icon" />
                 <input
                   type="text"
                   placeholder="Search citizen complaints by title, landmark, citizen name, or keywords..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    color: "#f8fafc",
-                    fontSize: "13px",
-                    outline: "none",
-                    width: "100%"
-                  }}
+                  className="gov-search-input"
                 />
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div className="gov-filter-selects-wrap">
                 <select
                   value={departmentFilter}
                   onChange={(e) => setDepartmentFilter(e.target.value)}
-                  style={{
-                    background: "#0f172a",
-                    border: "1px solid rgba(255, 255, 255, 0.15)",
-                    color: "#cbd5e1",
-                    padding: "7px 12px",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                    outline: "none"
-                  }}
+                  className="gov-filter-select"
                 >
                   <option value="all">All Municipal Departments</option>
                   <option value="Public Works Department (PWD)">Public Works (PWD)</option>
@@ -727,15 +809,7 @@ export default function GovernmentPortal() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  style={{
-                    background: "#0f172a",
-                    border: "1px solid rgba(255, 255, 255, 0.15)",
-                    color: "#cbd5e1",
-                    padding: "7px 12px",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                    outline: "none"
-                  }}
+                  className="gov-filter-select"
                 >
                   <option value="all">All Verification Statuses</option>
                   <option value="unverified">Pending Gov Verification</option>
@@ -791,19 +865,7 @@ export default function GovernmentPortal() {
                             </span>
                           )}
 
-                          <span style={{
-                            fontSize: "11px",
-                            padding: "3px 8px",
-                            borderRadius: "6px",
-                            background: report.status === "resolved"
-                              ? "rgba(16, 185, 129, 0.15)"
-                              : report.status === "in_progress"
-                              ? "rgba(6, 182, 212, 0.15)"
-                              : "rgba(245, 158, 11, 0.15)",
-                            color: report.status === "resolved" ? "#6ee7b7" : report.status === "in_progress" ? "#7dd3fc" : "#fde68a",
-                            fontWeight: 700,
-                            textTransform: "uppercase"
-                          }}>
+                          <span className={`gov-status-pill ${report.status || "pending"}`}>
                             Status: {report.status || "Pending"}
                           </span>
                         </div>
@@ -973,27 +1035,11 @@ export default function GovernmentPortal() {
                         <span className="gov-priority-pill critical">
                           Dynamic Priority: {incident.priority_score} ({incident.priority || "Urgent"})
                         </span>
-                        <span style={{
-                          padding: "3px 10px",
-                          borderRadius: "6px",
-                          background: "rgba(139, 92, 246, 0.15)",
-                          border: "1px solid rgba(139, 92, 246, 0.3)",
-                          color: "#c4b5fd",
-                          fontSize: "11px",
-                          fontWeight: 700
-                        }}>
+                        <span className="gov-cluster-badge">
                           {incident.count || 1} Clustered Citizen Complaints
                         </span>
                         {protest && (
-                          <span style={{
-                            padding: "3px 10px",
-                            borderRadius: "6px",
-                            background: "rgba(16, 185, 129, 0.15)",
-                            border: "1px solid rgba(16, 185, 129, 0.3)",
-                            color: "#6ee7b7",
-                            fontSize: "11px",
-                            fontWeight: 700
-                          }}>
+                          <span className="gov-protest-badge">
                             {protest.support_count} Verified Digital Micro-Protest Votes
                           </span>
                         )}
@@ -1326,15 +1372,7 @@ export default function GovernmentPortal() {
                     type="text"
                     value={modalCrew}
                     onChange={(e) => setModalCrew(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "8px",
-                      background: "#0f172a",
-                      border: "1px solid rgba(255,255,255,0.15)",
-                      color: "#fff",
-                      fontSize: "12px"
-                    }}
+                    className="gov-modal-input"
                   />
                 </div>
                 <div>
@@ -1345,15 +1383,7 @@ export default function GovernmentPortal() {
                     type="text"
                     value={modalEta}
                     onChange={(e) => setModalEta(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "8px",
-                      background: "#0f172a",
-                      border: "1px solid rgba(255,255,255,0.15)",
-                      color: "#fff",
-                      fontSize: "12px"
-                    }}
+                    className="gov-modal-input"
                   />
                 </div>
               </div>
@@ -1401,15 +1431,7 @@ export default function GovernmentPortal() {
                 <select
                   value={modalCrew}
                   onChange={(e) => setModalCrew(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    borderRadius: "8px",
-                    background: "#0f172a",
-                    border: "1px solid rgba(255, 255, 255, 0.15)",
-                    color: "#f8fafc",
-                    fontSize: "13px"
-                  }}
+                  className="gov-modal-select"
                 >
                   <option value="PWD Rapid Response Crew #4">PWD Rapid Response Crew #4 (Cold-Mix Patching)</option>
                   <option value="Municipal Jal Board Vacuum Unit #2">Municipal Jal Board Vacuum Unit #2 (Drainage & Sump)</option>
@@ -1427,15 +1449,7 @@ export default function GovernmentPortal() {
                   value={modalEta}
                   onChange={(e) => setModalEta(e.target.value)}
                   placeholder="e.g. Within 4 Hours, Today 6:00 PM"
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    borderRadius: "8px",
-                    background: "#0f172a",
-                    border: "1px solid rgba(255, 255, 255, 0.15)",
-                    color: "#f8fafc",
-                    fontSize: "13px"
-                  }}
+                  className="gov-modal-input"
                 />
               </div>
 
@@ -1496,15 +1510,7 @@ export default function GovernmentPortal() {
                   value={modalResolvePhoto}
                   onChange={(e) => setModalResolvePhoto(e.target.value)}
                   placeholder="https://images.unsplash.com/..."
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    borderRadius: "8px",
-                    background: "#0f172a",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    color: "#fff",
-                    fontSize: "12px"
-                  }}
+                  className="gov-modal-input"
                 />
               </div>
 
@@ -1634,15 +1640,7 @@ export default function GovernmentPortal() {
                     placeholder="e.g. Urgent Municipal Notice: Sector 4 Water Valve Maintenance"
                     value={newBroadcastTitle}
                     onChange={(e) => setNewBroadcastTitle(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: "8px",
-                      background: "#0f172a",
-                      border: "1px solid rgba(255,255,255,0.15)",
-                      color: "#fff",
-                      fontSize: "13px"
-                    }}
+                    className="gov-modal-input"
                   />
                 </div>
 
@@ -1668,15 +1666,7 @@ export default function GovernmentPortal() {
                     <select
                       value={newBroadcastDept}
                       onChange={(e) => setNewBroadcastDept(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        borderRadius: "8px",
-                        background: "#0f172a",
-                        border: "1px solid rgba(255,255,255,0.15)",
-                        color: "#fff",
-                        fontSize: "12px"
-                      }}
+                      className="gov-modal-select"
                     >
                       <option value="Public Works Department (PWD)">Public Works Department (PWD)</option>
                       <option value="Water Supply & Sewerage Board">Water Supply & Sewerage Board</option>
@@ -1692,15 +1682,7 @@ export default function GovernmentPortal() {
                     <select
                       value={newBroadcastSeverity}
                       onChange={(e) => setNewBroadcastSeverity(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        borderRadius: "8px",
-                        background: "#0f172a",
-                        border: "1px solid rgba(255,255,255,0.15)",
-                        color: "#fff",
-                        fontSize: "12px"
-                      }}
+                      className="gov-modal-select"
                     >
                       <option value="WARNING">WARNING (High Attention)</option>
                       <option value="EMERGENCY">EMERGENCY (Critical Public Hazard)</option>
