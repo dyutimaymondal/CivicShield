@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { getMapTilerTileUrl, MAPTILER_ATTRIBUTION } from "../lib/mapTiler";
+
 // Fix Leaflet marker icon asset paths
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -27,13 +29,14 @@ export default function CivicMap({ incidents = [], onSelectIncident, selectedInc
           center: [28.6139, 77.2090],
           zoom: 13,
           zoomControl: true,
-          attributionControl: false
+          attributionControl: true
         });
 
-        // CartoDB Dark Matter tile layer for cyber-civic aesthetic
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        // MapTiler Cloud Dark Tile Layer
+        L.tileLayer(getMapTilerTileUrl("streets-v2-dark"), {
           maxZoom: 19,
-          subdomains: "abcd",
+          tileSize: 256,
+          attribution: MAPTILER_ATTRIBUTION,
         }).addTo(map);
 
         mapInstanceRef.current = map;

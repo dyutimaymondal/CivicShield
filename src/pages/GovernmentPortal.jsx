@@ -28,6 +28,7 @@ import {
   Megaphone
 } from "lucide-react";
 import { civicStore } from "../lib/civicStore";
+import CivicProblemMap from "../components/CivicProblemMap";
 import "../government.css";
 
 const GOV_SESSION_KEY = "civicshield_gov_session_v1";
@@ -110,12 +111,15 @@ export default function GovernmentPortal() {
     setLoginError("");
 
     const cleanId = loginId.trim().toLowerCase();
-    const cleanEmail = seedGovEmail.toLowerCase();
-    const cleanSeedId = seedGovId.toLowerCase();
+    const cleanEmail = (seedGovEmail || "").trim().toLowerCase();
+    const cleanSeedId = (seedGovId || "").trim().toLowerCase();
 
-    // Check credentials against .env seeds
+    // Check credentials against .env seeds dynamically
     const idMatches = cleanId === cleanEmail || cleanId === cleanSeedId || cleanId === "admin";
-    const passwordMatches = loginPassword === seedGovPassword || loginPassword === "admin" || loginPassword === "gov123";
+    const passwordMatches =
+      loginPassword.trim() === (seedGovPassword || "").trim() ||
+      loginPassword.trim() === "admin" ||
+      loginPassword.trim() === "gov123";
 
     if (idMatches && passwordMatches) {
       const sessionData = {
@@ -609,6 +613,16 @@ export default function GovernmentPortal() {
         {/* NAVIGATION TABS BAR */}
         <div className="gov-tabs-nav">
           <button
+            className={`gov-tab-btn ${activeTab === "heatmap" ? "active" : ""}`}
+            onClick={() => setActiveTab("heatmap")}
+            style={activeTab === "heatmap" ? { borderColor: "#ef4444", color: "#f87171" } : {}}
+          >
+            <Flame size={15} style={{ color: activeTab === "heatmap" ? "#f87171" : "#fb923c" }} />
+            <span>Civic Problem Heatmap 🗺️</span>
+            <span className="gov-tab-counter" style={{ background: "rgba(239, 68, 68, 0.2)", color: "#fca5a5" }}>Live</span>
+          </button>
+
+          <button
             className={`gov-tab-btn ${activeTab === "posts" ? "active" : ""}`}
             onClick={() => setActiveTab("posts")}
           >
@@ -643,6 +657,15 @@ export default function GovernmentPortal() {
             <span>Field Crew & SLA Dispatcher</span>
           </button>
         </div>
+
+        {/* ====================================================================
+            TAB: CIVIC PROBLEM INTELLIGENCE HEATMAP
+            ==================================================================== */}
+        {activeTab === "heatmap" && (
+          <section style={{ marginBottom: "32px" }}>
+            <CivicProblemMap />
+          </section>
+        )}
 
         {/* ====================================================================
             TAB 1: CITIZEN POSTS & REPORTS QUEUE

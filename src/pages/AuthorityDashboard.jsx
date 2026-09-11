@@ -13,10 +13,12 @@ import {
   Radio,
   MapPin,
   CheckSquare,
-  Square
+  Square,
+  Flame
 } from "lucide-react";
 import { civicStore } from "../lib/civicStore";
 import { generateAuthorityBrief, generateAuthorityBriefAsync } from "../lib/aiIntelligence";
+import CivicProblemMap from "../components/CivicProblemMap";
 import "../authority.css";
 
 export default function AuthorityDashboard() {
@@ -30,6 +32,9 @@ export default function AuthorityDashboard() {
     const list = civicStore.getIncidents();
     return list.length > 0 ? list[0] : null;
   });
+
+  // Active Tab
+  const [activeTab, setActiveTab] = useState("console"); // "console" | "heatmap"
 
   // Filters
   const [selectedDepartment, setSelectedDepartment] = useState("all");
@@ -255,7 +260,56 @@ export default function AuthorityDashboard() {
           </div>
         </section>
 
-        {/* Layout Grid */}
+        {/* Tab Navigation */}
+        <div style={{ display: "flex", gap: "10px", margin: "20px 0", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab("console")}
+            style={{
+              padding: "10px 18px",
+              borderRadius: "8px",
+              border: "1px solid",
+              borderColor: activeTab === "console" ? "#f59e0b" : "rgba(255,255,255,0.1)",
+              background: activeTab === "console" ? "rgba(245, 158, 11, 0.15)" : "rgba(15, 23, 42, 0.6)",
+              color: activeTab === "console" ? "#fbbf24" : "#94a3b8",
+              cursor: "pointer",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px"
+            }}
+          >
+            <Building2 size={16} />
+            <span>Dispatch & Priority Console</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("heatmap")}
+            style={{
+              padding: "10px 18px",
+              borderRadius: "8px",
+              border: "1px solid",
+              borderColor: activeTab === "heatmap" ? "#ef4444" : "rgba(255,255,255,0.1)",
+              background: activeTab === "heatmap" ? "rgba(239, 68, 68, 0.15)" : "rgba(15, 23, 42, 0.6)",
+              color: activeTab === "heatmap" ? "#f87171" : "#94a3b8",
+              cursor: "pointer",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px"
+            }}
+          >
+            <Flame size={16} />
+            <span>Civic Problem Heatmap 🗺️</span>
+          </button>
+        </div>
+
+        {activeTab === "heatmap" ? (
+          <section style={{ marginBottom: "32px" }}>
+            <CivicProblemMap />
+          </section>
+        ) : (
+        /* Layout Grid */
         <div className="authority-layout-grid">
           {/* Left Column: Prioritized Incident Queue */}
           <div className="queue-column">
@@ -532,6 +586,7 @@ export default function AuthorityDashboard() {
             )}
           </div>
         </div>
+        )}
       </main>
     </div>
   );

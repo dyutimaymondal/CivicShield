@@ -305,6 +305,28 @@
 .civic-leaflet-container {
   width: 100%;
   height: 100%;
+  background: #080e1a !important;
+}
+
+/* Fallback filter only if raw OpenStreetMap tiles are used without MapTiler */
+.osm-fallback-dark-tiles {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7) !important;
+}
+
+/* OpenStreetMap attribution styling */
+.civic-map-wrapper .leaflet-control-attribution {
+  background: rgba(8, 14, 26, 0.85) !important;
+  color: #64748b !important;
+  font-size: 10px !important;
+  backdrop-filter: blur(6px);
+  border-top-left-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 3px 8px !important;
+}
+
+.civic-map-wrapper .leaflet-control-attribution a {
+  color: #38bdf8 !important;
+  text-decoration: none;
 }
 
 .map-overlay-legend {
@@ -502,9 +524,31 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  height: 600px;
   max-height: 600px;
   overflow-y: auto;
-  padding-right: 6px;
+  overflow-x: hidden;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) rgba(16, 26, 46, 0.4);
+}
+
+.incident-feed-col::-webkit-scrollbar {
+  width: 6px;
+}
+
+.incident-feed-col::-webkit-scrollbar-track {
+  background: rgba(16, 26, 46, 0.4);
+  border-radius: 4px;
+}
+
+.incident-feed-col::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+}
+
+.incident-feed-col::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.5);
 }
 
 .incident-card-preview {
@@ -512,11 +556,15 @@
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  padding: 20px;
+  padding: 18px 20px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   transition: all 0.2s ease;
+  flex-shrink: 0;
+  min-height: fit-content;
+  display: flex;
+  flex-direction: column;
 }
 
 .incident-card-preview:hover {
@@ -535,6 +583,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .card-top-badges {
@@ -587,10 +636,11 @@
 }
 
 .incident-card-preview h3 {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: #fff;
   margin-bottom: 6px;
+  line-height: 1.35;
 }
 
 .card-location-row {
@@ -599,14 +649,20 @@
   gap: 6px;
   color: var(--text-muted);
   font-size: 13px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .card-desc-snippet {
   color: var(--text-muted);
   font-size: 13px;
   line-height: 1.5;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Micro-Protest Banner on Card */
@@ -618,8 +674,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 .protest-ticker-left {
@@ -646,6 +703,8 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 12px;
   color: var(--text-muted);
+  margin-top: auto;
+  flex-shrink: 0;
 }
 
 .inspect-card-btn {

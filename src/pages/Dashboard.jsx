@@ -44,6 +44,7 @@ function Dashboard() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
+  const [coords, setCoords] = useState(null);
   const [photo, setPhoto] = useState(null);
 
   const [loading, setLoading] = useState(false);
@@ -135,17 +136,22 @@ function Dashboard() {
 
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
-      setLocation("Sector 4 Central Corridor (Manual Entry)");
+      setLocation("Sector V, Salt Lake, Kolkata (Manual Entry)");
+      setCoords({ latitude: 22.5735, longitude: 88.4331 });
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = pos.coords.latitude.toFixed(4);
-        const lng = pos.coords.longitude.toFixed(4);
-        setLocation(`Sector Geofence [${lat}, ${lng}]`);
+        const lat = parseFloat(pos.coords.latitude.toFixed(6));
+        const lng = parseFloat(pos.coords.longitude.toFixed(6));
+        setCoords({ latitude: lat, longitude: lng });
+        setLocation(`GPS Geofence [${lat.toFixed(4)}, ${lng.toFixed(4)}]`);
       },
       () => {
-        setLocation("Sector 4 Arterial Highway (GPS Simulated)");
+        const simLat = parseFloat((22.5726 + (Math.random() - 0.5) * 0.03).toFixed(6));
+        const simLng = parseFloat((88.3639 + (Math.random() - 0.5) * 0.03).toFixed(6));
+        setCoords({ latitude: simLat, longitude: simLng });
+        setLocation(`Kolkata Central Corridor [${simLat.toFixed(4)}, ${simLng.toFixed(4)}]`);
       }
     );
   };
@@ -293,7 +299,9 @@ function Dashboard() {
         category: aiData?.category,
         location: cleanLocation,
         photoUrl,
-        user
+        user,
+        latitude: coords?.latitude || 22.5726,
+        longitude: coords?.longitude || 88.3639
       });
 
       const effectiveAi = aiData || {
@@ -316,6 +324,7 @@ function Dashboard() {
       setTitle("");
       setDescription("");
       setLocation("");
+      setCoords(null);
       setPhoto(null);
 
       // Reset file input
