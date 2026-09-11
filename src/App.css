@@ -751,12 +751,21 @@
   border-color: rgba(6, 182, 212, 0.35);
 }
 
+.step-card.step-card-emerald {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, rgba(13, 22, 38, 0.8) 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
 .step-number {
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 700;
   color: var(--accent-cyan-light);
   margin-bottom: 14px;
+}
+
+.step-num-emerald {
+  color: var(--accent-emerald) !important;
 }
 
 .step-icon-wrap {
@@ -778,6 +787,12 @@
   color: var(--accent-cyan-light);
 }
 
+.step-card.step-card-emerald .step-icon-emerald {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--accent-emerald);
+  color: var(--accent-emerald);
+}
+
 .step-card h3 {
   font-size: 17px;
   font-weight: 700;
@@ -794,7 +809,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   color: var(--text-muted);
+}
+
+.connector-line {
+  width: 18px;
+  height: 2px;
+  background: var(--border-glass);
+  border-radius: 2px;
+}
+
+.connector-arrow {
+  color: var(--accent-cyan-light);
+  filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.4));
 }
 
 /* ==========================================================================
@@ -1097,34 +1125,350 @@
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.09);
 }
 
-[data-theme="light"] .workflow-step,
-.theme-light .workflow-step {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+/* ==========================================================================
+   Light Theme: Civic Workflow Step Cards (High Contrast & Elevation)
+   ========================================================================== */
+
+[data-theme="light"] .step-card,
+.theme-light .step-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 24px -4px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .step-card:hover,
+.theme-light .step-card:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .step-card h3,
+.theme-light .step-card h3 {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+[data-theme="light"] .step-card p,
+.theme-light .step-card p {
+  color: #334155;
+  line-height: 1.6;
+}
+
+[data-theme="light"] .step-number,
+.theme-light .step-number {
+  color: #0284c7;
+  font-weight: 800;
+}
+
+[data-theme="light"] .step-icon-wrap,
+.theme-light .step-icon-wrap {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+/* Card 02 (Highlight: AI Incident Clustering) */
+[data-theme="light"] .step-card.highlight,
+.theme-light .step-card.highlight {
+  background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 65%);
+  border: 1px solid #7dd3fc;
+  box-shadow: 0 8px 24px -2px rgba(2, 132, 199, 0.12);
+}
+
+[data-theme="light"] .step-card.highlight .step-number,
+.theme-light .step-card.highlight .step-number {
+  color: #0284c7;
+}
+
+[data-theme="light"] .step-card.highlight .step-icon-wrap,
+.theme-light .step-card.highlight .step-icon-wrap {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0284c7;
+}
+
+[data-theme="light"] .step-card.highlight h3,
+.theme-light .step-card.highlight h3 {
+  color: #0c4a6e;
+}
+
+/* Card 03 (Highlight: Digital Micro-Protest) */
+[data-theme="light"] .step-card.step-card-emerald,
+.theme-light .step-card.step-card-emerald {
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 65%);
+  border: 1px solid #86efac;
+  box-shadow: 0 8px 24px -2px rgba(16, 185, 129, 0.12);
+}
+
+[data-theme="light"] .step-card.step-card-emerald .step-num-emerald,
+.theme-light .step-card.step-card-emerald .step-num-emerald {
+  color: #15803d !important;
+}
+
+[data-theme="light"] .step-card.step-card-emerald .step-icon-emerald,
+.theme-light .step-card.step-card-emerald .step-icon-emerald {
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+  color: #15803d !important;
+}
+
+[data-theme="light"] .step-card.step-card-emerald h3,
+.theme-light .step-card.step-card-emerald h3 {
+  color: #064e3b;
+}
+
+/* Workflow Connectors */
+[data-theme="light"] .step-connector,
+.theme-light .step-connector {
+  color: #64748b;
+}
+
+[data-theme="light"] .connector-line,
+.theme-light .connector-line {
+  background: #cbd5e1;
+}
+
+[data-theme="light"] .connector-arrow,
+.theme-light .connector-arrow {
+  color: #0284c7;
+  filter: none;
+}
+
+/* Feature Cards Typography in Light Theme */
+[data-theme="light"] .feature-card h3,
+.theme-light .feature-card h3 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .feature-card p,
+.theme-light .feature-card p {
+  color: #334155;
+}
+
+/* Section Headings in Light Theme */
+[data-theme="light"] .features h2,
+.theme-light .features h2,
+[data-theme="light"] .workflow-section h2,
+.theme-light .workflow-section h2 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .section-subtitle,
+.theme-light .section-subtitle {
+  color: #475569;
+}
+
+[data-theme="light"] .section-badge,
+.theme-light .section-badge {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0284c7;
 }
 
 [data-theme="light"] .secondary-btn,
 .theme-light .secondary-btn {
   background: rgba(15, 23, 42, 0.04);
-  border-color: rgba(15, 23, 42, 0.12);
-  color: var(--text-primary);
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
 }
 
 [data-theme="light"] .secondary-btn:hover,
 .theme-light .secondary-btn:hover {
   background: rgba(15, 23, 42, 0.08);
+  border-color: #cbd5e1;
 }
 
+/* About Card in Light Theme */
 [data-theme="light"] .about-card,
 .theme-light .about-card {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .about-card h2,
+.theme-light .about-card h2 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .about-card p,
+.theme-light .about-card p {
+  color: #334155;
+}
+
+[data-theme="light"] .about-metric-item strong,
+.theme-light .about-metric-item strong {
+  color: #0f172a;
+}
+
+[data-theme="light"] .about-metric-item span,
+.theme-light .about-metric-item span {
+  color: #475569;
 }
 
 [data-theme="light"] .footer,
 .theme-light .footer {
   background: #f1f5f9;
   border-top: 1px solid var(--border-glass);
+}
+
+/* ==========================================================================
+   Smooth Scroll & Floating Section Reveal Indicator
+   ========================================================================== */
+
+.hero,
+.features,
+.workflow-section,
+.about-section {
+  scroll-margin-top: 85px;
+}
+
+/* Top Scroll Progress Indicator Bar */
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  background: linear-gradient(90deg, #06b6d4 0%, #10b981 45%, #38bdf8 85%, #f59e0b 100%);
+  transform-origin: 0%;
+  z-index: 9999;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.75);
+  pointer-events: none;
+}
+
+/* Floating Vertical Section Navigation Dots */
+.section-nav-dots {
+  position: fixed;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 90;
+  padding: 12px 7px;
+  background: rgba(6, 10, 18, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-glass);
+  border-radius: 9999px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  transition: all 0.3s ease;
+}
+
+[data-theme="light"] .section-nav-dots,
+.theme-light .section-nav-dots {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(203, 213, 225, 0.85);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.section-nav-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.section-nav-dot .dot-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme="light"] .section-nav-dot .dot-inner,
+.theme-light .section-nav-dot .dot-inner {
+  background: rgba(100, 116, 139, 0.45);
+}
+
+.section-nav-dot:hover .dot-inner {
+  background: var(--accent-cyan-light);
+  transform: scale(1.3);
+}
+
+.section-nav-dot.active .dot-inner {
+  width: 10px;
+  height: 22px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #22d3ee 0%, #06b6d4 100%);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.8);
+}
+
+[data-theme="light"] .section-nav-dot.active .dot-inner,
+.theme-light .section-nav-dot.active .dot-inner {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+  box-shadow: 0 0 10px rgba(3, 105, 161, 0.5);
+}
+
+.section-nav-dot .dot-tooltip {
+  position: absolute;
+  right: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: 6px;
+  background: rgba(13, 22, 38, 0.94);
+  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="light"] .section-nav-dot .dot-tooltip,
+.theme-light .section-nav-dot .dot-tooltip {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(203, 213, 225, 0.9);
+  color: #0f172a;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.section-nav-dot:hover .dot-tooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.section-nav-dot .dot-num {
+  font-family: var(--font-mono);
+  color: var(--accent-cyan-light);
+  font-weight: 700;
+}
+
+[data-theme="light"] .section-nav-dot .dot-num,
+.theme-light .section-nav-dot .dot-num {
+  color: #0284c7;
+}
+
+.nav-link.active-section {
+  color: var(--text-primary) !important;
+}
+
+.nav-link.active-section::after {
+  width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  .section-nav-dots {
+    display: none;
+  }
 }

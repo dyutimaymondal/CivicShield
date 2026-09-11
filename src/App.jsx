@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useScroll, useSpring } from "framer-motion";
 import {
   Shield,
   Sparkles,
@@ -26,6 +26,43 @@ import "./App.css";
 
 function App() {
   const [currentUser, setCurrentUser] = React.useState(null);
+  const [activeSection, setActiveSection] = React.useState("home");
+
+  // Dynamic Scroll Progress Bar
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  // Active section tracking for floating dots and navbar highlighting
+  React.useEffect(() => {
+    const sections = ["home", "features", "workflow", "about"];
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 180;
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const sectionId = sections[i];
+        const el = document.getElementById(sectionId);
+        if (el && scrollPosition >= el.offsetTop) {
+          setActiveSection(sectionId);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSection = (e, id) => {
+    e?.preventDefault();
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   React.useEffect(() => {
     authStore.getActiveSession().then((session) => {
@@ -55,6 +92,33 @@ function App() {
 
   return (
     <div className="app">
+      {/* Top Scroll Progress Indicator Bar */}
+      <motion.div className="scroll-progress-bar" style={{ scaleX }} />
+
+      {/* Floating Vertical Section Navigation Dots (Pages revealed one by one) */}
+      <nav className="section-nav-dots" aria-label="Page Sections Navigation">
+        {[
+          { id: "home", label: "Home Overview", num: "01" },
+          { id: "features", label: "Intelligence Platform", num: "02" },
+          { id: "workflow", label: "Civic Workflow", num: "03" },
+          { id: "about", label: "Mission & Impact", num: "04" }
+        ].map(({ id, label, num }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={(e) => scrollToSection(e, id)}
+            className={`section-nav-dot ${activeSection === id ? "active" : ""}`}
+            aria-label={`Scroll to ${label}`}
+          >
+            <span className="dot-inner" />
+            <span className="dot-tooltip">
+              <span className="dot-num">{num}</span>
+              <span className="dot-name">{label}</span>
+            </span>
+          </button>
+        ))}
+      </nav>
+
       {/* Background Glow Elements */}
       <div className="ambient-glow glow-1" />
       <div className="ambient-glow glow-2" />
@@ -63,7 +127,7 @@ function App() {
       {/* Navigation */}
       <header className="navbar-wrapper">
         <nav className="navbar">
-          <div className="logo">
+          <div className="logo" onClick={(e) => scrollToSection(e, "home")}>
             <div className="logo-icon-wrap">
               <Shield className="logo-icon" size={22} />
               <div className="logo-pulse" />
@@ -72,13 +136,40 @@ function App() {
           </div>
 
           <div className="nav-links">
-            <a href="#home" className="nav-link">Home</a>
+            <a
+              href="#home"
+              onClick={(e) => scrollToSection(e, "home")}
+              className={`nav-link ${activeSection === "home" ? "active-section" : ""}`}
+            >
+              Home
+            </a>
+            <a
+              href="#features"
+              onClick={(e) => scrollToSection(e, "features")}
+              className={`nav-link ${activeSection === "features" ? "active-section" : ""}`}
+            >
+              Features
+            </a>
+            <a
+              href="#workflow"
+              onClick={(e) => scrollToSection(e, "workflow")}
+              className={`nav-link ${activeSection === "workflow" ? "active-section" : ""}`}
+            >
+              Workflow
+            </a>
+            <a
+              href="#about"
+              onClick={(e) => scrollToSection(e, "about")}
+              className={`nav-link ${activeSection === "about" ? "active-section" : ""}`}
+            >
+              About
+            </a>
+
             <Link to="/incidents" className="nav-link">Public Incidents</Link>
             <Link to="/government" className="nav-link authority-btn" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <Building2 size={15} />
               <span>Gov Portal 🏛️</span>
             </Link>
-            <a href="#workflow" className="nav-link">Workflow</a>
 
             {/* Animated Theme Toggle */}
             <ThemeToggle size="sm" />
@@ -122,7 +213,7 @@ function App() {
         </nav>
       </header>
 
-      {/* Hero Section */}
+      {/* PAGE 1: Hero Section */}
       <main id="home" className="hero">
         <div className="hero-content">
           <motion.div
@@ -303,129 +394,205 @@ function App() {
         </motion.div>
       </main>
 
-      {/* Features Section */}
-      <section id="features" className="features">
-        <div className="section-badge">INTELLIGENCE PLATFORM</div>
-        <h2>One Platform. Complete Civic Intelligence.</h2>
-        <p className="section-subtitle">
-          Closing the gap between decentralized citizen complaints and municipal action.
-        </p>
+      {/* PAGE 2: Features Section with Staggered Scroll Reveal */}
+      <motion.section
+        id="features"
+        className="features"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.15 }}
+        transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.15 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="section-badge">INTELLIGENCE PLATFORM</div>
+          <h2>One Platform. Complete Civic Intelligence.</h2>
+          <p className="section-subtitle">
+            Closing the gap between decentralized citizen complaints and municipal action.
+          </p>
+        </motion.div>
 
         <div className="feature-grid">
-          <motion.div
-            className="feature-card"
-            whileHover={{ y: -6, transition: { duration: 0.2 } }}
-          >
-            <div className="feature-icon-wrapper cyan">
-              <FileText size={24} />
-            </div>
-            <h3>Smart Complaints</h3>
-            <p>
-              Submit detailed citizen reports with real-time photo uploads, precise geolocation mapping, and guided context capture.
-            </p>
-            <div className="feature-glow cyan" />
-          </motion.div>
-
-          <motion.div
-            className="feature-card"
-            whileHover={{ y: -6, transition: { duration: 0.2 } }}
-          >
-            <div className="feature-icon-wrapper emerald">
-              <Cpu size={24} />
-            </div>
-            <h3>AI Categorization</h3>
-            <p>
-              Autonomous natural language analysis that categorizes municipal issues, calculates risk severity, and synthesizes summaries instantly.
-            </p>
-            <div className="feature-glow emerald" />
-          </motion.div>
-
-          <motion.div
-            className="feature-card"
-            whileHover={{ y: -6, transition: { duration: 0.2 } }}
-          >
-            <div className="feature-icon-wrapper amber">
-              <Layers size={24} />
-            </div>
-            <h3>Duplicate Detection</h3>
-            <p>
-              Intelligent vector clustering correlates similar complaints across geographical zones, preventing department backlog duplication.
-            </p>
-            <div className="feature-glow amber" />
-          </motion.div>
-
-          <motion.div
-            className="feature-card"
-            whileHover={{ y: -6, transition: { duration: 0.2 } }}
-          >
-            <div className="feature-icon-wrapper violet">
-              <LayoutDashboard size={24} />
-            </div>
-            <h3>Authority Dispatch</h3>
-            <p>
-              Streamlined dashboard that arms public works departments with structured incident telemetry, severity heatmaps, and verification proofs.
-            </p>
-            <div className="feature-glow violet" />
-          </motion.div>
+          {[
+            {
+              icon: <FileText size={24} />,
+              color: "cyan",
+              title: "Smart Complaints",
+              desc: "Submit detailed citizen reports with real-time photo uploads, precise geolocation mapping, and guided context capture."
+            },
+            {
+              icon: <Cpu size={24} />,
+              color: "emerald",
+              title: "AI Categorization",
+              desc: "Autonomous natural language analysis that categorizes municipal issues, calculates risk severity, and synthesizes summaries instantly."
+            },
+            {
+              icon: <Layers size={24} />,
+              color: "amber",
+              title: "Duplicate Detection",
+              desc: "Intelligent vector clustering correlates similar complaints across geographical zones, preventing department backlog duplication."
+            },
+            {
+              icon: <LayoutDashboard size={24} />,
+              color: "violet",
+              title: "Authority Dispatch",
+              desc: "Streamlined dashboard that arms public works departments with structured incident telemetry, severity heatmaps, and verification proofs."
+            }
+          ].map((item, idx) => (
+            <motion.div
+              key={item.title}
+              className="feature-card"
+              initial={{ opacity: 0, y: 35, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 0.55, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -6, transition: { duration: 0.2 } }}
+            >
+              <div className={`feature-icon-wrapper ${item.color}`}>
+                {item.icon}
+              </div>
+              <h3>{item.title}</h3>
+              <p>{item.desc}</p>
+              <div className={`feature-glow ${item.color}`} />
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </motion.section>
 
-      {/* Workflow Section */}
-      <section id="workflow" className="workflow-section">
-        <div className="section-badge">CIVIC WORKFLOW</div>
-        <h2>How CivicShield Solves Public Problems</h2>
-        <p className="section-subtitle">A seamless pipeline from initial report to verified municipal resolution.</p>
+      {/* PAGE 3: Civic Workflow Section with Pipeline Sequential Reveal */}
+      <motion.section
+        id="workflow"
+        className="workflow-section"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.15 }}
+        transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.15 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="section-badge">CIVIC WORKFLOW</div>
+          <h2>How CivicShield Solves Public Problems</h2>
+          <p className="section-subtitle">A seamless pipeline from initial report to verified municipal resolution.</p>
+        </motion.div>
 
         <div className="workflow-steps">
-          <div className="step-card">
+          {/* Step 1 */}
+          <motion.div
+            className="step-card"
+            initial={{ opacity: 0, y: 35, scale: 0.94 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <div className="step-number">01</div>
             <div className="step-icon-wrap"><Users size={22} /></div>
             <h3>Citizen Reports</h3>
             <p>A resident observes a problem, captures photos, and submits a complaint with GPS location.</p>
-          </div>
+          </motion.div>
 
-          <div className="step-connector">
+          {/* Connector 1 */}
+          <motion.div
+            className="step-connector"
+            initial={{ opacity: 0, scaleX: 0 }}
+            whileInView={{ opacity: 1, scaleX: 1 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.4, delay: 0.18 }}
+          >
             <div className="connector-line" />
             <ArrowRight size={18} className="connector-arrow" />
-          </div>
+          </motion.div>
 
-          <div className="step-card highlight">
+          {/* Step 2 */}
+          <motion.div
+            className="step-card highlight"
+            initial={{ opacity: 0, y: 35, scale: 0.94 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.5, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <div className="step-number">02</div>
             <div className="step-icon-wrap"><Sparkles size={22} /></div>
             <h3>AI Incident Clustering</h3>
             <p>Duplicate complaints are semantically unified into one incident, calculating dynamic priority and drafting a public demand.</p>
-          </div>
+          </motion.div>
 
-          <div className="step-connector">
+          {/* Connector 2 */}
+          <motion.div
+            className="step-connector"
+            initial={{ opacity: 0, scaleX: 0 }}
+            whileInView={{ opacity: 1, scaleX: 1 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.4, delay: 0.36 }}
+          >
             <div className="connector-line" />
             <ArrowRight size={18} className="connector-arrow" />
-          </div>
+          </motion.div>
 
-          <div className="step-card highlight" style={{ borderColor: "rgba(16, 185, 129, 0.4)" }}>
-            <div className="step-number" style={{ color: "var(--accent-emerald)" }}>03</div>
-            <div className="step-icon-wrap" style={{ background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-emerald)" }}>
+          {/* Step 3 */}
+          <motion.div
+            className="step-card highlight step-card-emerald"
+            initial={{ opacity: 0, y: 35, scale: 0.94 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.5, delay: 0.44, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
+            <div className="step-number step-num-emerald">03</div>
+            <div className="step-icon-wrap step-icon-emerald">
               <ShieldCheck size={22} />
             </div>
             <h3>Digital Micro-Protest</h3>
             <p>Verified citizens one-tap support legitimate demands without physical gathering, signaling real community urgency.</p>
-          </div>
+          </motion.div>
 
-          <div className="step-connector">
+          {/* Connector 3 */}
+          <motion.div
+            className="step-connector"
+            initial={{ opacity: 0, scaleX: 0 }}
+            whileInView={{ opacity: 1, scaleX: 1 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.4, delay: 0.54 }}
+          >
             <div className="connector-line" />
             <ArrowRight size={18} className="connector-arrow" />
-          </div>
+          </motion.div>
 
-          <div className="step-card">
+          {/* Step 4 */}
+          <motion.div
+            className="step-card"
+            initial={{ opacity: 0, y: 35, scale: 0.94 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.5, delay: 0.62, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <div className="step-number">04</div>
             <div className="step-icon-wrap"><Building2 size={22} /></div>
             <h3>Authority Resolution</h3>
             <p>Municipal departments inspect AI briefs, deploy field repair crews, and publish transparent progress.</p>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* About Section */}
-      <section id="about" className="about-section">
+      {/* PAGE 4: About Section with Metrics Pop Reveal */}
+      <motion.section
+        id="about"
+        className="about-section"
+        initial={{ opacity: 0, y: 50, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: false, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="about-card">
           <div className="about-content">
             <span className="section-badge">ABOUT CIVICSHIELD</span>
@@ -436,28 +603,52 @@ function App() {
               is heard, validated, and converted into tangible community improvements.
             </p>
             <div className="about-metrics">
-              <div className="about-metric-item">
+              <motion.div
+                className="about-metric-item"
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.5, delay: 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+              >
                 <strong>10x</strong>
                 <span>Faster Triage</span>
-              </div>
-              <div className="about-metric-item">
+              </motion.div>
+              <motion.div
+                className="about-metric-item"
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.5, delay: 0.25, ease: [0.34, 1.56, 0.64, 1] }}
+              >
                 <strong>0%</strong>
                 <span>Lost Complaints</span>
-              </div>
-              <div className="about-metric-item">
+              </motion.div>
+              <motion.div
+                className="about-metric-item"
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.5, delay: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
+              >
                 <strong>100%</strong>
                 <span>Public Transparency</span>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Footer */}
-      <footer className="footer">
+      {/* Footer with Smooth Fade Up Reveal */}
+      <motion.footer
+        className="footer"
+        initial={{ opacity: 0, y: 35 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.12 }}
+        transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="footer-top">
           <div className="footer-brand">
-            <div className="logo">
+            <div className="logo" onClick={(e) => scrollToSection(e, "home")}>
               <div className="logo-icon-wrap">
                 <Shield className="logo-icon" size={20} />
               </div>
@@ -471,10 +662,10 @@ function App() {
           <div className="footer-links-group">
             <div className="footer-col">
               <h4>Platform</h4>
-              <a href="#home">Home</a>
-              <a href="#features">Features</a>
-              <a href="#workflow">Workflow</a>
-              <a href="#about">About</a>
+              <a href="#home" onClick={(e) => scrollToSection(e, "home")}>Home</a>
+              <a href="#features" onClick={(e) => scrollToSection(e, "features")}>Features</a>
+              <a href="#workflow" onClick={(e) => scrollToSection(e, "workflow")}>Workflow</a>
+              <a href="#about" onClick={(e) => scrollToSection(e, "about")}>About</a>
             </div>
             <div className="footer-col">
               <h4>Portals</h4>
@@ -494,7 +685,7 @@ function App() {
             <span>CivicShield Systems Operational</span>
           </div>
         </div>
-      </footer>
+      </motion.footer>
     </div>
   );
 }
