@@ -68,7 +68,7 @@ const getSeverityWeight = (severity) => {
   return 1;
 };
 
-// Heatmap gradient matching the dark cyber UI: Green -> Yellow -> Orange -> Red -> Crimson
+// Heatmap gradient matching the cyber UI: Green -> Yellow -> Orange -> Red -> Crimson
 const HEATMAP_GRADIENT = {
   0.2: "#22c55e",
   0.4: "#84cc16",
@@ -80,7 +80,8 @@ const HEATMAP_GRADIENT = {
 
 export default function CivicProblemMap() {
   const mapContainerRef = useRef(null);
-  const [mapInstance, setMapInstance] = useState(null);
+  const mapInstanceRef = useRef(null);
+  const [mapReady, setMapReady] = useState(false);
   const tileLayerRef = useRef(null);
   const heatLayerRef = useRef(null);
   const hotspotMarkersRef = useRef([]);
@@ -97,7 +98,8 @@ export default function CivicProblemMap() {
 
   // Map view mode states
   const { theme } = useTheme();
-  const tileMode = theme === "light" ? "standard" : "dark"; // auto-sync with theme
+  const [tileModeOverride, setTileModeOverride] = useState(null);
+  const tileMode = tileModeOverride || (theme === "light" ? "standard" : "dark");
   const [showHotspotPins, setShowHotspotPins] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(true);
 
@@ -119,7 +121,7 @@ export default function CivicProblemMap() {
     }
   }, []);
 
-  // Initial load + Real-time sync listener (Supabase postgres_changes + civicStore)
+  // Initial load + Real-time sync listener
   useEffect(() => {
     let isMounted = true;
     civicStore
@@ -135,12 +137,10 @@ export default function CivicProblemMap() {
         }
       });
 
-    // 1. Subscribe to local civicStore events
     const unsubStore = civicStore.subscribe(() => {
       fetchReportsData();
     });
 
-    // 2. Subscribe to Supabase Realtime channel for live reports
     let realtimeChannel = null;
     try {
       realtimeChannel = supabase
@@ -196,7 +196,6 @@ export default function CivicProblemMap() {
         const dLat = r.latitude - lat;
         const dLng = r.longitude - lng;
         const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-        // Roughly 0.008 degrees ~ 800 meters radius
         return dist <= 0.008;
       });
 
@@ -205,7 +204,6 @@ export default function CivicProblemMap() {
         return;
       }
 
-      // Determine dominant category
       const catCounts = {};
       nearby.forEach((r) => {
         const c = r.category || "General Concern";
@@ -215,7 +213,6 @@ export default function CivicProblemMap() {
         catCounts[a] > catCounts[b] ? a : b
       );
 
-      // Determine highest severity
       let highestSeverity = "Low";
       const sevRanks = { critical: 4, high: 3, medium: 2, low: 1 };
       let maxRank = 0;
@@ -228,7 +225,6 @@ export default function CivicProblemMap() {
         }
       });
 
-      // Determine latest report date
       const sortedByDate = [...nearby].sort(
         (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
       );
@@ -250,10 +246,8 @@ export default function CivicProblemMap() {
         computedTimeAgo = "Recent";
       }
 
-      // Primary location label
       const locName = nearby[0]?.location || "Kolkata Civic Sector";
 
-      // Intensity Level
       let intensityLevel = "Low";
       if (nearby.length >= 10) intensityLevel = "Critical";
       else if (nearby.length >= 6) intensityLevel = "High";
@@ -275,101 +269,116 @@ export default function CivicProblemMap() {
     [filteredReports]
   );
 
-  // Initialize Leaflet Map with MapTiler Cloud tiles
+  // Keep a stable ref to inspectHotspotAt so Leaflet click handler doesn't re-create the map
+  const inspectHotspotAtRef = useRef(inspectHotspotAt);
+  useEffect(() => {
+    inspectHotspotAtRef.current = inspectHotspotAt;
+  }, [inspectHotspotAt]);
+
+  // Initialize Leaflet Map ONCE on mount
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    let map = null;
     let resizeObserver = null;
 
-    if (mapContainerRef.current._leaflet_id) {
-      delete mapContainerRef.current._leaflet_id;
-    }
-
-    try {
-      map = L.map(mapContainerRef.current, {
-        center: KOLKATA_CENTER,
-        zoom: DEFAULT_ZOOM,
-        zoomControl: false,
-        attributionControl: true,
-      });
-
-      // Add initial base MapTiler Cloud tile layer (streets-v2-dark)
-      const tileLayer = L.tileLayer(getMapTilerTileUrl("streets-v2-dark"), {
-        maxZoom: 19,
-        tileSize: 256,
-        attribution: MAPTILER_ATTRIBUTION,
-      }).addTo(map);
-      tileLayerRef.current = tileLayer;
-
-      // Leaflet click handler to inspect nearby hotspots
-      map.on("click", (e) => {
-        if (e.latlng) {
-          inspectHotspotAt(e.latlng.lat, e.latlng.lng);
-        }
-      });
-
-      // Ensure proper map sizing
-      setTimeout(() => {
-        if (map) map.invalidateSize();
-      }, 150);
-
-      if (window.ResizeObserver && mapContainerRef.current) {
-        resizeObserver = new ResizeObserver(() => {
-          if (map) map.invalidateSize();
-        });
-        resizeObserver.observe(mapContainerRef.current);
+    if (!mapInstanceRef.current) {
+      if (mapContainerRef.current._leaflet_id) {
+        delete mapContainerRef.current._leaflet_id;
       }
+      mapContainerRef.current.innerHTML = "";
 
-      requestAnimationFrame(() => {
-        setMapInstance(map);
-      });
-    } catch (err) {
-      console.warn("CivicProblemMap Leaflet initialization notice:", err.message);
+      try {
+        const map = L.map(mapContainerRef.current, {
+          center: KOLKATA_CENTER,
+          zoom: DEFAULT_ZOOM,
+          zoomControl: false,
+          attributionControl: true,
+        });
+
+        map.on("click", (e) => {
+          if (e.latlng && inspectHotspotAtRef.current) {
+            inspectHotspotAtRef.current(e.latlng.lat, e.latlng.lng);
+          }
+        });
+
+        mapInstanceRef.current = map;
+
+        map.whenReady(() => {
+          setMapReady(true);
+          setTimeout(() => {
+            try {
+              map.invalidateSize();
+            } catch {}
+          }, 100);
+        });
+
+        if (window.ResizeObserver && mapContainerRef.current) {
+          resizeObserver = new ResizeObserver(() => {
+            try {
+              if (map) map.invalidateSize();
+            } catch {}
+          });
+          resizeObserver.observe(mapContainerRef.current);
+        }
+      } catch (err) {
+        console.warn("CivicProblemMap Leaflet initialization notice:", err.message);
+      }
     }
 
     return () => {
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
-      if (map) {
-        map.remove();
-        setMapInstance(null);
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove();
+        } catch {}
+        mapInstanceRef.current = null;
         tileLayerRef.current = null;
         heatLayerRef.current = null;
+        hotspotMarkersRef.current = [];
+        setMapReady(false);
       }
     };
-  }, [inspectHotspotAt]);
+  }, []); // Mount ONCE
 
-  // Update Tile Layer when tileMode changes (Dark vs Dataviz vs Streets)
+  // Update Tile Layer when tileMode changes
   useEffect(() => {
-    if (!mapInstance) return;
+    const map = mapInstanceRef.current;
+    if (!map || !mapReady) return;
 
     if (tileLayerRef.current) {
-      mapInstance.removeLayer(tileLayerRef.current);
+      try {
+        map.removeLayer(tileLayerRef.current);
+      } catch {}
     }
 
-    const currentLayer = TILE_LAYERS[tileMode] || TILE_LAYERS.dark;
-    const newTileLayer = L.tileLayer(getMapTilerTileUrl(currentLayer.style), {
-      maxZoom: 19,
-      tileSize: 256,
-      attribution: MAPTILER_ATTRIBUTION,
-    }).addTo(mapInstance);
-    tileLayerRef.current = newTileLayer;
-  }, [mapInstance, tileMode]);
+    try {
+      const currentLayer = TILE_LAYERS[tileMode] || TILE_LAYERS.dark;
+      const newTileLayer = L.tileLayer(getMapTilerTileUrl(currentLayer.style), {
+        maxZoom: 19,
+        tileSize: 256,
+        attribution: MAPTILER_ATTRIBUTION,
+      }).addTo(map);
+      tileLayerRef.current = newTileLayer;
+    } catch (err) {
+      console.warn("Tile layer swap notice:", err.message);
+    }
+  }, [mapReady, tileMode]);
 
-  // Update Heatmap Layer whenever mapInstance, filteredReports, or showHeatmap changes
+  // Update Heatmap Layer
   useEffect(() => {
-    if (!mapInstance) return;
+    const map = mapInstanceRef.current;
+    if (!map || !mapReady) return;
 
-    // Remove existing heatmap layer
     if (heatLayerRef.current) {
-      mapInstance.removeLayer(heatLayerRef.current);
+      try {
+        map.removeLayer(heatLayerRef.current);
+      } catch {}
       heatLayerRef.current = null;
     }
 
     if (!showHeatmap || filteredReports.length === 0) return;
 
-    // Prepare weighted points: [lat, lng, weight]
     const heatPoints = filteredReports
       .filter((r) => r.latitude && r.longitude)
       .map((r) => [r.latitude, r.longitude, getSeverityWeight(r.severity)]);
@@ -385,24 +394,27 @@ export default function CivicProblemMap() {
         gradient: HEATMAP_GRADIENT,
       });
 
-      heat.addTo(mapInstance);
+      heat.addTo(map);
       heatLayerRef.current = heat;
     } catch (err) {
       console.warn("Leaflet HeatLayer update notice:", err.message);
     }
-  }, [mapInstance, filteredReports, showHeatmap]);
+  }, [mapReady, filteredReports, showHeatmap]);
 
   // Update Interactive Hotspot Cluster Pins
   useEffect(() => {
-    if (!mapInstance) return;
+    const map = mapInstanceRef.current;
+    if (!map || !mapReady) return;
 
-    // Clear previous markers
-    hotspotMarkersRef.current.forEach((m) => m.remove());
+    hotspotMarkersRef.current.forEach((m) => {
+      try {
+        m.remove();
+      } catch {}
+    });
     hotspotMarkersRef.current = [];
 
     if (!showHotspotPins) return;
 
-    // Cluster reports into distinct geographic nodes (~500m proximity)
     const clusterNodes = [];
     filteredReports.forEach((r) => {
       if (!r.latitude || !r.longitude) return;
@@ -447,24 +459,30 @@ export default function CivicProblemMap() {
         </div>
       `;
 
-      const customIcon = L.divIcon({
-        className: "osm-marker-container",
-        html: markerHtml,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-      });
+      try {
+        const customIcon = L.divIcon({
+          className: "osm-marker-container",
+          html: markerHtml,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+        });
 
-      const marker = L.marker([node.lat, node.lng], { icon: customIcon }).addTo(mapInstance);
+        const marker = L.marker([node.lat, node.lng], { icon: customIcon }).addTo(map);
 
-      marker.on("click", (e) => {
-        L.DomEvent.stopPropagation(e);
-        inspectHotspotAt(node.lat, node.lng);
-        mapInstance.panTo([node.lat, node.lng]);
-      });
+        marker.on("click", (e) => {
+          L.DomEvent.stopPropagation(e);
+          if (inspectHotspotAtRef.current) {
+            inspectHotspotAtRef.current(node.lat, node.lng);
+          }
+          map.panTo([node.lat, node.lng]);
+        });
 
-      hotspotMarkersRef.current.push(marker);
+        hotspotMarkersRef.current.push(marker);
+      } catch (err) {
+        console.warn("Marker creation notice:", err.message);
+      }
     });
-  }, [mapInstance, filteredReports, showHotspotPins, inspectHotspotAt]);
+  }, [mapReady, filteredReports, showHotspotPins]);
 
   // Unique filter dropdown options
   const categories = useMemo(() => {
@@ -486,28 +504,28 @@ export default function CivicProblemMap() {
   };
 
   const handleFocusKolkata = () => {
-    if (mapInstance) {
-      mapInstance.flyTo(KOLKATA_CENTER, DEFAULT_ZOOM, { duration: 0.8 });
+    const map = mapInstanceRef.current;
+    if (map) {
+      map.flyTo(KOLKATA_CENTER, DEFAULT_ZOOM, { duration: 0.8 });
     }
   };
 
   const handleFlyToZone = (coords, zoom) => {
-    if (mapInstance) {
-      mapInstance.flyTo(coords, zoom, { duration: 1 });
-      inspectHotspotAt(coords[0], coords[1]);
+    const map = mapInstanceRef.current;
+    if (map) {
+      map.flyTo(coords, zoom, { duration: 1 });
+      if (inspectHotspotAtRef.current) {
+        inspectHotspotAtRef.current(coords[0], coords[1]);
+      }
     }
   };
 
   const handleZoomIn = () => {
-    if (mapInstance) {
-      mapInstance.zoomIn();
-    }
+    mapInstanceRef.current?.zoomIn();
   };
 
   const handleZoomOut = () => {
-    if (mapInstance) {
-      mapInstance.zoomOut();
-    }
+    mapInstanceRef.current?.zoomOut();
   };
 
   return (
@@ -706,9 +724,10 @@ export default function CivicProblemMap() {
             type="button"
             className="map-control-btn active"
             onClick={() =>
-              setTileMode((prev) =>
-                prev === "dark" ? "dataviz" : prev === "dataviz" ? "standard" : "dark"
-              )
+              setTileModeOverride((prev) => {
+                const current = prev || (theme === "light" ? "standard" : "dark");
+                return current === "dark" ? "dataviz" : current === "dataviz" ? "standard" : "dark";
+              })
             }
             title="Toggle between MapTiler styles (Dark / Dataviz / Streets)"
           >

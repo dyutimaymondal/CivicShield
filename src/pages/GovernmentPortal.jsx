@@ -31,6 +31,7 @@ import { civicStore } from "../lib/civicStore";
 import { supabase } from "../lib/supabaseClient";
 import CivicProblemMap from "../components/CivicProblemMap";
 import ThemeToggle from "../components/ThemeToggle";
+import ErrorBoundary from "../components/ErrorBoundary";
 import "../government.css";
 
 const GOV_SESSION_KEY = "civicshield_gov_session_v1";
@@ -771,7 +772,9 @@ export default function GovernmentPortal() {
             ==================================================================== */}
         {activeTab === "heatmap" && (
           <section style={{ marginBottom: "32px" }}>
-            <CivicProblemMap />
+            <ErrorBoundary>
+              <CivicProblemMap />
+            </ErrorBoundary>
           </section>
         )}
 

@@ -20,6 +20,7 @@ import { civicStore } from "../lib/civicStore";
 import { generateAuthorityBrief, generateAuthorityBriefAsync } from "../lib/aiIntelligence";
 import CivicProblemMap from "../components/CivicProblemMap";
 import ThemeToggle from "../components/ThemeToggle";
+import ErrorBoundary from "../components/ErrorBoundary";
 import "../authority.css";
 
 export default function AuthorityDashboard() {
@@ -308,7 +309,9 @@ export default function AuthorityDashboard() {
 
         {activeTab === "heatmap" ? (
           <section style={{ marginBottom: "32px" }}>
-            <CivicProblemMap />
+            <ErrorBoundary>
+              <CivicProblemMap />
+            </ErrorBoundary>
           </section>
         ) : (
         /* Layout Grid */
